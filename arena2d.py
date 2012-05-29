@@ -4,7 +4,7 @@
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '1.7'
+#Version = '1.8'
 
 #CONSTANTS
 FPS = 60
@@ -171,12 +171,12 @@ class mario(pygame.sprite.Sprite):
 		self.jump_frames = 0
 		self.jumped = True
 		self.jumping = False
+		self.collided = False
 		
 		self.combo = 0
 		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
-		
 		#Determine x direction and acceleration 
 		#Joystack compatible
 		self.xspeed=xspeed
@@ -219,19 +219,23 @@ class mario(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				self.collisioncheck()
+				if self.collisioncheck():
+					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				self.collisioncheck()
+				if self.collisioncheck():
+					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				self.collisioncheck()
+				if self.collisioncheck():
+					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				self.collisioncheck()
+				if self.collisioncheck():
+					break
 		#Set Image
 		if self.jump_frames != 0: #Jump image if jumped
 			self.image = self.sprite_options[1]
@@ -248,6 +252,7 @@ class mario(pygame.sprite.Sprite):
 		
 	def collisioncheck(self):
 		global collisionCheckDist
+		self.collided = False
 		if self.rect.bottom >= height:
 			self.rect.bottom = height
 			self.jump_frames = 0
@@ -272,7 +277,8 @@ class mario(pygame.sprite.Sprite):
 								self.y_vel = 0
 								self.jumped = False
 								self.jump_frames = 0
-								self.rect.bottom = p.rect.top+1
+								self.rect.bottom = p.rect.top
+								self.collided = True
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-9 and\
 							self.rect.top <= p.rect.bottom:
@@ -280,26 +286,29 @@ class mario(pygame.sprite.Sprite):
 								self.y_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
-								self.rect.top = p.rect.bottom+1
-						###New left and right collisions not working --> breaks up and down collisions
-						if self.rect.bottom >= p.rect.top and\
+								self.rect.top = p.rect.bottom
+								self.collided = True
+						if self.rect.bottom >= p.rect.top+stair_tolerance and\
 						self.rect.top <= p.rect.bottom:
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
-								#print "Collide right"
+								print "Collide right"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
 								self.rect.left = p.rect.right+1
+								self.collided = True
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
-								#print "Collide left"
+								print "Collide left"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
 								self.rect.right = p.rect.left-1
+								self.collided = True
+		return self.collided
 			
 pointFont = pygame.font.SysFont('ocraextended',24)
 class point(pygame.sprite.Sprite):
@@ -359,7 +368,8 @@ for i in range(0,pygame.joystick.get_count()):
 	players.append(totalplayers[i])
 	
 xtolerance=0.05
-collisionCheckDist = 100 #how close platforms need to be to check for collision; needs to be larger than width and height of player and platform sprite
+collisionCheckDist = 150 #how close platforms need to be to check for collision; needs to be larger than width and height of player and platform sprite
+stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
 #assign controls to marios1
 
 firebuttonleft = 4
@@ -424,7 +434,7 @@ while running:
 			for controller in enumerate(joysticks):
 				i = controller[0]
 				jumping[i] = controller[1].get_button(jumpbutton)
-			
+					
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = platform(event.pos)
 			platforms.add(newp)
@@ -520,11 +530,17 @@ while running:
 	#1.6 - Optimized loop movement
 	
 	#1.7 - Added level saver/loader
+	
+	#1.8 - Fixed jumping issue
+	
+	#1.9 - Fixed ducking and stair issue
 
 #Bugs:
 
-	#Mario faces does not change direction if movement changes direction without stopping
-	#Need to fix jumping --> collision detection makes jumping off platforms unresponsive
+	#Up to quad-jumping possible with proper timing
+	#Sprite direction defaults to right-facing always
+	#Can get stuck on edges of platforms
+	#Mario can jump-duck through platforms (best demonstrated on "Maze.map")
 	
 #TO ADD:
 
