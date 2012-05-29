@@ -4,7 +4,7 @@
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '1.8'
+#Version = '1.9'
 
 #CONSTANTS
 FPS = 60
