@@ -267,7 +267,7 @@ class mario(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_accell = 0
 		for p in platforms:
-			if abs(p.rect.x-m.rect.x)<=collisionCheckDist and abs(p.rect.y-m.rect.y)<=collisionCheckDist:
+			if abs(p.rect.x-m.rect.x)<=collisionCheckDist+p.rect.length and abs(p.rect.y-m.rect.y)<=collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, m):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							#Top collision
@@ -368,7 +368,7 @@ for i in range(0,pygame.joystick.get_count()):
 	players.append(totalplayers[i])
 	
 xtolerance=0.05
-collisionCheckDist = 150 #how close platforms need to be to check for collision; needs to be larger than width and height of player and platform sprite
+collisionCheckDist = 20 #how close platforms need to be to check for collision; needs to be larger than width and height of player and platform sprite
 stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
 #assign controls to marios1
 
