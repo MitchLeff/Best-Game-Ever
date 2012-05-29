@@ -44,7 +44,7 @@ combo3 = pygame.mixer.Sound("sounds/godlike.wav")
 combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
 
 #LOAD IMAGES
-background_image = (pygame.image.load("images/coach.png").convert_alpha())
+background_image = (pygame.image.load("images/space.jpg").convert_alpha())
 
 mario_still = (pygame.image.load("images/mario_still.png").convert_alpha())
 mario_jump = (pygame.image.load("images/mario_jump.png").convert_alpha())
@@ -56,8 +56,8 @@ MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
 platform_img = pygame.image.load("images/platform.png").convert_alpha()
 
-width  = max(300,background_image.get_width())
-height = max(200,background_image.get_height())
+width  = 500#max(300,background_image.get_width())
+height = 400#max(200,background_image.get_height())
 size   = [width, height]
 screen = pygame.display.set_mode(size)
 background = pygame.Surface(screen.get_size())
@@ -342,7 +342,13 @@ while running:
 	bills.update()
 	platforms.update()
 	
-	screen.blit(background_image, (0,0))
+	actual_pos = players[0].sprites()[0].rect.center
+	drawn_pos = (0-players[0].sprites()[0].rect.centerx, 0-players[0].sprites()[0].rect.centery)
+	
+	print actual_pos
+	print drawn_pos
+	
+	screen.blit(background_image, drawn_pos)
 	
 	#Draw marios
 	for player in players:
