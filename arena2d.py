@@ -172,6 +172,7 @@ class mario(pygame.sprite.Sprite):
 		self.jumped = True
 		self.jumping = False
 		self.collided = False
+		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
 		self.combo = 0
 		
@@ -251,7 +252,6 @@ class mario(pygame.sprite.Sprite):
 			self.image = pygame.transform.flip(self.image, True, False)
 		
 	def collisioncheck(self):
-		global collisionCheckDist
 		self.collided = False
 		if self.rect.bottom >= height:
 			self.rect.bottom = height
@@ -267,22 +267,22 @@ class mario(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_accell = 0
 		for p in platforms:
-			if abs(p.rect.x-m.rect.x)<=collisionCheckDist+p.rect.length and abs(p.rect.y-m.rect.y)<=collisionCheckDist+p.rect.height:
+			if abs(p.rect.x-m.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-m.rect.y)<= self.collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, m):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							#Top collision
-							if self.rect.bottom <= p.rect.top+10 and\
+							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
-								#print "Collide top"
+								print "Collide top"
 								self.y_vel = 0
 								self.jumped = False
 								self.jump_frames = 0
 								self.rect.bottom = p.rect.top
 								self.collided = True
 							#Bottom collision
-							elif self.rect.top >= p.rect.bottom-9 and\
+							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
-								#print "Collide bottom"
+								print "Collide bottom"
 								self.y_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -368,7 +368,6 @@ for i in range(0,pygame.joystick.get_count()):
 	players.append(totalplayers[i])
 	
 xtolerance=0.05
-collisionCheckDist = 20 #how close platforms need to be to check for collision; needs to be larger than width and height of player and platform sprite
 stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
 #assign controls to marios1
 
@@ -546,3 +545,4 @@ while running:
 
 	#One melee and one range ability
 	#Different classes
+	#Camera scrolling
