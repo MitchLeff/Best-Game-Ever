@@ -335,17 +335,19 @@ class grenade(pygame.sprite.Sprite):
 	def collisioncheck(self):
 		self.collided = False
 		if self.rect.bottom >= height:
-			self.rect.bottom = height
+			self.rect.bottom = height-1
 			self.bounce("vert")
 
 		if self.rect.left < 0:
+			self.rect.left = 1
 			self.bounce("horiz")
 			
 		elif self.rect.right >= width:
+			self.rect.right = width-1
 			self.bounce("horiz")
 			
 		#PLATFORM COLLISIONS
-		#*6*
+		#*5*
 		for p in platforms:
 			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:#Check this code
 				if pygame.sprite.collide_mask(p, m):
@@ -396,6 +398,8 @@ class grenade(pygame.sprite.Sprite):
 			self.y_vel *= -self.elasticity
 		if bounce_dir=="horiz":
 			self.x_vel *= -self.elasticity#*5*
+		if DEBUG:
+			print "Grenade speed (x,y): %s" %self.x_vel,self.y_vel
 		
 class mario(pygame.sprite.Sprite):
 	def __init__(self):
@@ -604,7 +608,7 @@ class mario(pygame.sprite.Sprite):
 		elif self.xdirection<0:
 			direction = self.rect.left
 			grenade_dir = -1
-		item = grenade(grenade_dir,(direction,self.rect.top+self.rect.height/2),abs(self.x_vel)+10,abs(self.y_vel)+10)
+		item = grenade(grenade_dir,(direction,self.rect.top+self.rect.height/2),abs(self.x_vel)+10,10)
 		grenades.add(item)
 		if DEBUG:
 			print item.rect.midbottom
@@ -869,19 +873,22 @@ while running:
 
 	#1.0 - Bullets
 	
-	#1.1 - 
+	#1.1 - Damage and Health
+	
+	#1.2 - Bullets face proper direction and have sound
 
 	#1.3 - Added grenades
+	
+	#1.4 - Grenades bounce (but not enough)
 
 #Bugs:
 
 	#*1* keyboard_player1 has no platform collision detection
 	#*2* Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
 	#*3* keyboard_player2 has infinite jump loop
-	#*4* each bullet hits player 4 times --> temp fix only hit for 1/4 of damage
-	#*5* Grenade slides, doesn't bounce --> be sure to negate y_accell, instead of y_vel, override gravity, but (maybe multiply by 1+ elasticity instead)
-	#*6* Collisions with platforms broken for grenades --> same code as mario
-	#*7* 
+	#*4* each bullet hits player 3-5 times 
+	#*5* Collisions with platforms broken for grenades --> same code as mario
+ 
 
 #TO ADD:
 
@@ -891,6 +898,10 @@ while running:
 	#Damage and health system
 	#HUD
 	#Ability to adjust number of players and allow at least 2 on keyboard
+	
+#OPTIMIZATIONS:
+	
+	#Make grenades not bounce up and down when velocity is 0
 	
 #Attributions:
 	
