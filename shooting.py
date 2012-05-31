@@ -4,7 +4,7 @@
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '1.0'
+#Version = '1.3'
 
 #CONSTANTS
 FPS = 60
@@ -58,9 +58,12 @@ mario_walk2 = (pygame.image.load("images/mario_walk2.png").convert_alpha())
 mario_walk3 = (pygame.image.load("images/mario_walk3.png").convert_alpha())
 MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario_walk3, mario_walk2]
 
-#BULLET IMAGES
+#WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())
 BULLET_SPRITE_OPTIONS = [bullet_img]
+grenade_img = (pygame.image.load("images/grenade.png").convert_alpha())
+#explosion = (pygame.image.load("images/explosion.png").convert_alpha())
+GRENADE_SPRITE_OPTIONS = [grenade_img]
 
 #ENEMY IMAGES
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
@@ -248,12 +251,151 @@ class bullet(pygame.sprite.Sprite):
 							self.kill()
 							return
 		
-class projectile(pygame.sprite.Sprite):
-	def __init__(self,x_vel,y_vel,elasticity = 0.8):
+class grenade(pygame.sprite.Sprite):
+	def __init__(self,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):
 		pygame.sprite.Sprite.__init__(self)
-		self.x_vel = xvel
-		self.y_vel = yvel
+		self.sprite_options = GRENADE_SPRITE_OPTIONS
+		self.image = self.sprite_options[0]
+		self.rect = self.image.get_rect()
+		if dir == -1:
+			self.rect.right,self.rect.top = pos
+		elif dir == 1:
+			self.rect.left,self.rect.top = pos
+
+		self.max_speed_x = MAX_SPEED_X
+		self.max_speed_y = MAX_SPEED_Y
+		
+		self.accell = 0.1
+		
+		self.natural_accell = self.accell/2
+		
+		self.x_vel = dir*x_vel
+		self.y_vel = -y_vel
+		self.xdirection = 1
+		self.ydirection = 0	
+		self.x_accell = 0
+		self.y_accell = GRAVITY
 		self.elasticity = elasticity
+		
+		self.collided = False
+		self.collisionCheckDist = max(self.rect.height,self.rect.width)
+		
+	def update(self,xspeed=0,UP=False):
+		global DOWN, RIGHT, LEFT, height, width, platforms
+		
+		self.x_vel += self.x_accell
+		self.y_vel += self.y_accell
+		
+		#Check for deceleration
+		if self.x_accell == 0:
+			
+			if self.x_vel <= self.natural_accell and self.x_vel >= -1*self.natural_accell:
+				self.x_vel = 0
+			elif self.x_vel < 0:
+				self.x_vel += self.natural_accell
+			elif self.x_vel > 0:
+				self.x_vel -= self.natural_accell
+		
+		#Check Max Speed
+		if self.x_vel >= self.max_speed_x:
+			self.x_vel = self.max_speed_x
+		elif self.x_vel <= -1*self.max_speed_x:
+			self.x_vel = -1*self.max_speed_x
+		if self.y_vel >= self.max_speed_y:
+			self.y_vel = self.max_speed_y
+		elif self.y_vel <= -1*self.max_speed_y:
+			self.y_vel = -1*self.max_speed_y
+		
+		#Update position
+		if (self.x_vel<0):
+			for i in range(abs(int(self.x_vel))):
+				self.rect.left += -1
+				if self.collisioncheck():
+					break 
+		elif (self.x_vel>0):
+			for i in range(int(self.x_vel)):
+				self.rect.left += 1
+				if self.collisioncheck():
+					break
+		if (self.y_vel<0):
+			for i in range(abs(int(self.y_vel))):
+				self.rect.top += -1
+				if self.collisioncheck():
+					break
+		elif (self.y_vel>0):
+			for i in range(int(self.y_vel)):
+				self.rect.top += 1
+				if self.collisioncheck():
+					break
+			
+		#Check to flip for going left
+		if self.xdirection == -1:
+			self.image = pygame.transform.flip(self.image, True, False)
+		
+	def collisioncheck(self):
+		self.collided = False
+		if self.rect.bottom >= height:
+			self.rect.bottom = height
+			self.bounce("vert")
+
+		if self.rect.left < 0:
+			self.bounce("horiz")
+			
+		elif self.rect.right >= width:
+			self.bounce("horiz")
+			
+		#PLATFORM COLLISIONS
+		#*6*
+		for p in platforms:
+			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:#Check this code
+				if pygame.sprite.collide_mask(p, m):
+						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
+							
+							#Top collision
+							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
+							self.rect.bottom >= p.rect.top:
+								if DEBUG:
+									print "Collide top"
+								#self.rect.bottom = p.rect.top
+								self.collided = True
+								self.bounce("vert")
+							
+							#Bottom collision
+							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
+							self.rect.top <= p.rect.bottom:
+								if DEBUG:
+									print "Collide bottom"
+								#self.rect.top = p.rect.bottom
+								self.collided = True
+								self.bounce("vert")
+						
+						if self.rect.bottom >= p.rect.top+stair_tolerance and\
+						self.rect.top <= p.rect.bottom:
+							
+							#Right Collision
+							if self.rect.left <= p.rect.right and\
+							self.rect.left >= p.rect.right-10:
+								if DEBUG:
+									print "Collide right"
+								#self.rect.left = p.rect.right+1
+								self.collided = True
+								self.bounce("horiz")
+							
+							#Left Collision
+							elif self.rect.right >= p.rect.left and\
+							self.rect.right <= p.rect.left+10:
+								if DEBUG:
+									print "Collide left"
+								#self.rect.right = p.rect.left-1
+								self.collided = True
+								self.bounce("horiz")
+		return self.collided
+		
+	def bounce(self,bounce_dir):
+		if bounce_dir=="vert":
+			self.y_vel *= -self.elasticity
+		if bounce_dir=="horiz":
+			self.x_vel *= -self.elasticity#*5*
 		
 class mario(pygame.sprite.Sprite):
 	def __init__(self):
@@ -453,6 +595,19 @@ class mario(pygame.sprite.Sprite):
 			bullet_dir = -1
 		shot = bullet((direction,self.rect.top+self.rect.height/2),bullet_dir,dmg,speed)
 		bullets.add(shot)
+		
+	def throw(self):
+		global grenades
+		if self.xdirection>0:#facing right
+			direction = self.rect.right
+			grenade_dir = 1
+		elif self.xdirection<0:
+			direction = self.rect.left
+			grenade_dir = -1
+		item = grenade(grenade_dir,(direction,self.rect.top+self.rect.height/2),abs(self.x_vel)+10,abs(self.y_vel)+10)
+		grenades.add(item)
+		if DEBUG:
+			print item.rect.midbottom
 			
 pointFont = pygame.font.SysFont('ocraextended',24)
 class point(pygame.sprite.Sprite):
@@ -478,6 +633,7 @@ class platform(pygame.sprite.Sprite):
 points = pygame.sprite.Group()
 platforms = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
+grenades = pygame.sprite.Group()
 
 highscore = 0
 score = 0
@@ -603,6 +759,10 @@ while running:
 				for m in players[keyboard_player1]:
 					m.shoot(10,m.xdirection*5)
 				guns.play(shoot)
+				
+			elif event.key == K_LSHIFT:
+				for m in players[keyboard_player1]:
+					m.throw()
 			
 			#Keyboard Player 2
 			elif event.key == K_UP:
@@ -691,8 +851,13 @@ while running:
 		
 	#Draw and Update Bullets
 	for b in bullets:
-		screen.blit(b.image, b.rect)
 		b.update()
+		screen.blit(b.image, b.rect)
+
+	#Update and Draw Grenades
+	for g in grenades:
+		g.update()
+		screen.blit(g.image, g.rect)
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
@@ -700,12 +865,23 @@ while running:
 	
 	cycles += 1
 
+#Version History
+
+	#1.0 - Bullets
+	
+	#1.1 - 
+
+	#1.3 - Added grenades
+
 #Bugs:
 
 	#*1* keyboard_player1 has no platform collision detection
 	#*2* Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
 	#*3* keyboard_player2 has infinite jump loop
 	#*4* each bullet hits player 4 times --> temp fix only hit for 1/4 of damage
+	#*5* Grenade slides, doesn't bounce --> be sure to negate y_accell, instead of y_vel, override gravity, but (maybe multiply by 1+ elasticity instead)
+	#*6* Collisions with platforms broken for grenades --> same code as mario
+	#*7* 
 
 #TO ADD:
 
