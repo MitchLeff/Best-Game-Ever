@@ -15,6 +15,7 @@ DEATH_TIMER = 40
 FLOATING_TEXT_LIFESPAN = 70
 MAX_SPEED_X = 9
 MAX_SPEED_Y = 15
+DEBUG = True
 
 #IMPORTS
 import pygame, random, sys, glob, pickle
@@ -37,6 +38,7 @@ die_sound = pygame.mixer.Sound("sounds/die.wav")
 jump_sound = pygame.mixer.Sound("sounds/jump.wav")
 stomp_sound = pygame.mixer.Sound("sounds/stomp.wav")
 shoot = pygame.mixer.Sound("sounds/shoot.wav")
+hurt = pygame.mixer.Sound("sounds/hurt.wav")
 
 combo0 = pygame.mixer.Sound("sounds/killingspree.wav")
 combo1 = pygame.mixer.Sound("sounds/rampage.wav")
@@ -74,6 +76,15 @@ background = pygame.Surface(screen.get_size())
 def br(lines=1):
 	for i in range(0,lines):
 		print ""
+		
+def volumeChange(change):
+	currentVol = pygame.mixer.music.get_volume()
+	currentVol += change
+	if currentVol > 1.0:
+		currentVol = 1.0
+	elif currentVol < 0.0:
+		currentVol = 0.0
+	pygame.mixer.music.set_volume(currentVol)
 	
 def saveLevel(currentmap, mapname):
 	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
@@ -110,14 +121,17 @@ def chooseLevel():
 
 #Base class for bullet-type projectiles
 class bullet(pygame.sprite.Sprite):
-	def __init__(self,pos,damage=5,xvel=200):
+	def __init__(self,pos,dir=1,damage=10,xvel=200):
 	
 		#SPRITE
 		pygame.sprite.Sprite.__init__(self)
 		self.sprite_options = BULLET_SPRITE_OPTIONS
 		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
-		self.rect.left,self.rect.top = pos
+		if dir == 1: 
+			self.rect.left,self.rect.top = pos
+		elif dir == -1:
+			self.rect.right,self.rect.top = pos
 		
 		#MOVEMENT
 		self.x_vel = xvel
@@ -182,7 +196,7 @@ class bullet(pygame.sprite.Sprite):
 			
 		for p in platforms:
 			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and\
-			abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+self.rect.height:
+			abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							#Top collision
@@ -220,7 +234,18 @@ class bullet(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.right = p.rect.left-1
 								self.collided = True
-		return self.collided
+		for player in players:
+			for m in player:
+					#*4*
+					if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
+					abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
+						if pygame.sprite.collide_mask(m, self):
+							m.health -= self.damage
+							if DEBUG:
+								print m.health
+							hurt.play()
+							self.kill()
+							return
 		
 class projectile(pygame.sprite.Sprite):
 	def __init__(self,x_vel,y_vel,elasticity = 0.8):
@@ -265,12 +290,17 @@ class mario(pygame.sprite.Sprite):
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
+		self.health=100
 		self.combo = 0
 		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
 		#Determine x direction and acceleration 
 		#Joystack compatible
+		if self.health <= 0:
+			sfx.play(die_sound)
+			self.kill()
+			
 		self.xspeed=xspeed
 		if self.xspeed!=0:
 			self.xdirection = self.xspeed
@@ -360,14 +390,15 @@ class mario(pygame.sprite.Sprite):
 			
 		#PLATFORM COLLISIONS
 		for p in platforms:
-			if abs(p.rect.x-m.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-m.rect.y)<= self.collisionCheckDist+p.rect.height:
+			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, m):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							
 							#Top collision
 							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
-								print "Collide top"
+								if DEBUG:
+									print "Collide top"
 								self.y_vel = 0
 								self.jumped = False
 								self.jump_frames = 0
@@ -377,7 +408,8 @@ class mario(pygame.sprite.Sprite):
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
-								print "Collide bottom"
+								if DEBUG:
+									print "Collide bottom"
 								self.y_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -390,7 +422,8 @@ class mario(pygame.sprite.Sprite):
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
-								print "Collide right"
+								if DEBUG:
+									print "Collide right"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -400,7 +433,8 @@ class mario(pygame.sprite.Sprite):
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
-								print "Collide left"
+								if DEBUG:
+									print "Collide left"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -412,9 +446,11 @@ class mario(pygame.sprite.Sprite):
 		global bullets
 		if self.xdirection>0:#facing right
 			direction = self.rect.right
+			bullet_dir = 1
 		elif self.xdirection<0:
-			direction = self.rect.left	
-		shot = bullet((direction,self.rect.top+self.rect.height/2),dmg,speed)
+			direction = self.rect.left
+			bullet_dir = -1
+		shot = bullet((direction,self.rect.top+self.rect.height/2),bullet_dir,dmg,speed)
 		bullets.add(shot)
 			
 pointFont = pygame.font.SysFont('ocraextended',24)
@@ -454,7 +490,8 @@ highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
 pygame.mixer.music.load("sounds/Five Armies.mp3")
-#pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.set_volume(0)
 
 #Load Joysticks
 pygame.joystick.init()
@@ -474,8 +511,16 @@ for i in range(0,pygame.joystick.get_count()):
 	jumping.append(False)
 	players.append(totalplayers[i])
 	
-if len(players) == 0:
-	players.append(totalplayers[0]) #If no players, add one player
+#Add keyboard players
+if len(players) < 4:
+	keyboard_player1 = len(players)
+	players.append(totalplayers[keyboard_player1])
+	xspeed.append(0)
+	jumping.append(False)
+	
+if len(players) < 4:
+	keyboard_player2 = len(players)
+	players.append(totalplayers[keyboard_player2]) #If no players, add one player
 	xspeed.append(0)
 	jumping.append(False)
 	
@@ -512,6 +557,21 @@ while running:
 			if event.key == K_ESCAPE:
 				running = False
 				
+			#Toggle debug mode
+			elif event.key == K_BACKQUOTE:
+				if DEBUG == False:
+					DEBUG = True
+					print "Debug Mode Enabled."
+				elif DEBUG == True:
+					DEBUG = False
+					print "Debug Mode Disabled."
+			
+			#Adjust Music Volume	
+			elif event.key == K_PAGEUP:
+				volumeChange(0.2)
+			elif event.key == K_PAGEDOWN:
+				volumeChange(-0.2)
+					
 			#SAVE PLATFORMS
 			elif event.key == K_1:
 				saved_platforms = []
@@ -527,25 +587,50 @@ while running:
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
+			
+			#Keyboard Player 1
 			elif event.key == K_w:
-				jumping[0] = True
+				jumping[keyboard_player1] = True
 			
 			elif event.key == K_a:
-				xspeed[0] = -1
+				xspeed[keyboard_player1] = -1
 				
 			elif event.key == K_d:
-				xspeed[0] = 1
+				xspeed[keyboard_player1] = 1
 			
 			elif event.key == K_SPACE:
-				for m in marios1:
-					m.shoot(5,m.xdirection*5)
+				for m in players[keyboard_player1]:
+					m.shoot(10,m.xdirection*5)
+				shoot.play()
+			
+			#Keyboard Player 2
+			elif event.key == K_UP:
+				jumping[keyboard_player2] = True
+			
+			elif event.key == K_LEFT:
+				xspeed[keyboard_player2] = -1
+				
+			elif event.key == K_RIGHT:
+				xspeed[keyboard_player2] = 1
+			
+			elif event.key == K_SLASH:
+				for m in players[keyboard_player2]:
+					m.shoot(10,m.xdirection*5)#10 is dmg
 				shoot.play()
 				
-		elif event.type == KEYUP and (event.key == K_a or event.key == K_d):
-			xspeed[0]=0
-				
-		elif event.type == KEYUP and (event.key == K_w):
-			jumping[0] = False
+		elif event.type == KEYUP:
+			
+			#Keyboard Player 1
+			if event.key == K_a or event.key == K_d:
+				xspeed[keyboard_player1]=0		
+			elif event.key == K_w:
+				jumping[keyboard_player1] = False
+			
+			#Keyboard Player 2
+			if event.key == K_LEFT or K_RIGHT:
+				xspeed[keyboard_player2]=0
+			elif event.key == K_UP:
+				jumping[keyboard_player2]=False
 				
 		#QUIT
 		if event.type == QUIT:
@@ -582,7 +667,6 @@ while running:
 
 	for controller in enumerate(joysticks):
 		i = controller[0]
-		xspeed[i] = controller[1].get_axis(Xax)#prints unnecessary debug info
 		if abs(xspeed[i]) <= xtolerance:#if x is too close to zero
 			xspeed[i]=0
 	#End new joystick code (1.1)
@@ -617,7 +701,10 @@ while running:
 
 #Bugs:
 
-	#Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
+	#*1* keyboard_player1 has no platform collision detection
+	#*2* Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
+	#*3* keyboard_player2 has infinite jump loop
+	#*4* each bullet hits player 4 times --> temp fix only hit for 1/4 of damage
 
 #TO ADD:
 
@@ -631,8 +718,11 @@ while running:
 #Attributions:
 	
 	#Sounds
-		#Laser sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/
-	
+		#Laser Sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/ 
+			#- THE_bizniss CC Sample+ 1.0
+		#Hurt Sound - http://www.freesound.org/people/thecheeseman/sounds/44429/ 
+			#- thecheeseman CC Attribution 3.0
+		
 	#Images
-	
+
 	#Code
