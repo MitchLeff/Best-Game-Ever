@@ -4,7 +4,7 @@
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '0.0'
+#Version = '1.0'
 
 #CONSTANTS
 FPS = 60
@@ -157,7 +157,7 @@ class bullet(pygame.sprite.Sprite):
 				if self.collisioncheck():
 					break
 		if self.collided:
-			del self#***Check to see if this is working
+			self.kill()
 			return
 			
 		#Check to flip for going left
@@ -179,14 +179,15 @@ class bullet(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_accell = 0
 			self.collided = True
+			
 		for p in platforms:
-			if abs(p.rect.x-m.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-m.rect.y)<= self.collisionCheckDist+p.rect.height:
-				if pygame.sprite.collide_mask(p, m):
+			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and\
+			abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+self.rect.height:
+				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							#Top collision
 							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
-								print "Collide top"
 								self.y_vel = 0
 								self.jumped = False
 								self.jump_frames = 0
@@ -195,18 +196,17 @@ class bullet(pygame.sprite.Sprite):
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
-								print "Collide bottom"
 								self.y_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
 								self.rect.top = p.rect.bottom
 								self.collided = True
-						if self.rect.bottom >= p.rect.top+stair_tolerance and\
+						
+						if self.rect.bottom >= p.rect.top and\
 						self.rect.top <= p.rect.bottom:
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
-								print "Collide right"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -215,7 +215,6 @@ class bullet(pygame.sprite.Sprite):
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
-								print "Collide left"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -358,10 +357,13 @@ class mario(pygame.sprite.Sprite):
 			self.rect.right = width
 			self.x_vel = 0
 			self.x_accell = 0
+			
+		#PLATFORM COLLISIONS
 		for p in platforms:
 			if abs(p.rect.x-m.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-m.rect.y)<= self.collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, m):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
+							
 							#Top collision
 							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
@@ -371,6 +373,7 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.bottom = p.rect.top
 								self.collided = True
+							
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
@@ -380,8 +383,10 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.top = p.rect.bottom
 								self.collided = True
+						
 						if self.rect.bottom >= p.rect.top+stair_tolerance and\
 						self.rect.top <= p.rect.bottom:
+							
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
@@ -391,6 +396,7 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.left = p.rect.right+1
 								self.collided = True
+							
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
@@ -404,7 +410,11 @@ class mario(pygame.sprite.Sprite):
 		
 	def shoot(self,dmg,speed):
 		global bullets
-		shot = bullet((self.rect.right,self.rect.top+self.rect.height/2),dmg,speed)
+		if self.xdirection>0:#facing right
+			direction = self.rect.right
+		elif self.xdirection<0:
+			direction = self.rect.left	
+		shot = bullet((direction,self.rect.top+self.rect.height/2),dmg,speed)
 		bullets.add(shot)
 			
 pointFont = pygame.font.SysFont('ocraextended',24)
@@ -464,10 +474,16 @@ for i in range(0,pygame.joystick.get_count()):
 	jumping.append(False)
 	players.append(totalplayers[i])
 	
+if len(players) == 0:
+	players.append(totalplayers[0]) #If no players, add one player
+	xspeed.append(0)
+	jumping.append(False)
+	
 xtolerance=0.05
 stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
 #assign controls to marios1
 
+#CONTROL VARIABLES
 firebuttonleft = 4
 firebuttonright = 5
 fireleft = False
@@ -475,6 +491,7 @@ fireright = False
 jumpbutton = 0
 quitbutton = 6#6 is back button
 
+#MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
 
@@ -488,27 +505,54 @@ while running:
 	Xax = 0
 	
 	for event in pygame.event.get():
+		
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
+			
 			if event.key == K_ESCAPE:
 				running = False
+				
+			#SAVE PLATFORMS
 			elif event.key == K_1:
-			#Save all platform positions in map
 				saved_platforms = []
 				for p in platforms:
 					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
 				saveLevel(saved_platforms,raw_input("What level name to save as? "))
+			
+			#LOAD PLATFORMS
 			elif event.key == K_2:
-			#Load all platform positions in map
 				del platforms
 				platform_pos = chooseLevel()
 				platforms = pygame.sprite.Group()
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
+			elif event.key == K_w:
+				jumping[0] = True
+			
+			elif event.key == K_a:
+				xspeed[0] = -1
+				
+			elif event.key == K_d:
+				xspeed[0] = 1
+			
+			elif event.key == K_SPACE:
+				for m in marios1:
+					m.shoot(5,m.xdirection*5)
+				shoot.play()
+				
+		elif event.type == KEYUP and (event.key == K_a or event.key == K_d):
+			xspeed[0]=0
+				
+		elif event.type == KEYUP and (event.key == K_w):
+			jumping[0] = False
+				
+		#QUIT
 		if event.type == QUIT:
 			pygame.quit()
 			sys.exit()
+		
+		#JOYSTICK CONTROLS
 		elif event.type == JOYBUTTONDOWN:
 			for controller in enumerate(joysticks):
 				i = controller[0]
@@ -520,11 +564,11 @@ while running:
 			elif event.button == firebuttonleft:
 				for m in marios1:
 					m.shoot(5,-5)
-				shoot.play(int(shoot.get_length()))
+				shoot.play()
 			elif event.button == firebuttonright:
 				for m in marios1:
 					m.shoot(5,5)
-				shoot.play(int(shoot.get_length()))
+				shoot.play()
 				
 		elif event.type == JOYBUTTONUP:
 			for controller in enumerate(joysticks):
@@ -556,12 +600,12 @@ while running:
 		for m in player:
 			screen.blit(m.image, m.rect)
 	
-	#Platform Update
+	#Draw Plaforms
 	for p in platforms.sprites():
 		screen.blit(p.image,p.rect)
 		
-	#Bullet Update
-	for b in bullets:#bullets refuse to appear
+	#Draw and Update Bullets
+	for b in bullets:
 		screen.blit(b.image, b.rect)
 		b.update()
 
@@ -570,19 +614,25 @@ while running:
 	pygame.display.update()
 	
 	cycles += 1
-	if death_timer > 0:
-		death_timer -= 1
-		if death_timer <= 0:
-			marios1.add(mario())
-			marios2.add(mario())
-			score = 0
-			scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 
 #Bugs:
 
+	#Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
 
 #TO ADD:
 
 	#One melee and one range ability
 	#Different classes
 	#Camera scrolling
+	#Damage and health system
+	#HUD
+	#Ability to adjust number of players and allow at least 2 on keyboard
+	
+#Attributions:
+	
+	#Sounds
+		#Laser sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/
+	
+	#Images
+	
+	#Code
