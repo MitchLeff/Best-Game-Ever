@@ -15,6 +15,7 @@ DEATH_TIMER = 40
 FLOATING_TEXT_LIFESPAN = 70
 MAX_SPEED_X = 9
 MAX_SPEED_Y = 15
+DEBUG = True
 
 #IMPORTS
 import pygame, random, sys, glob, pickle
@@ -65,6 +66,15 @@ background = pygame.Surface(screen.get_size())
 def br(lines=1):
 	for i in range(0,lines):
 		print ""
+	
+def volumeChange(change):
+	currentVol = pygame.mixer.music.get_volume()
+	currentVol += change
+	if currentVol > 1.0:
+		currentVol = 1.0
+	elif currentVol < 0.0:
+		currentVol = 0.0
+	pygame.mixer.music.set_volume(currentVol)
 	
 def saveLevel(currentmap, mapname):
 	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
@@ -273,7 +283,8 @@ class mario(pygame.sprite.Sprite):
 							#Top collision
 							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
-								print "Collide top"
+								if DEBUG:
+									print "Collide top"
 								self.y_vel = 0
 								self.jumped = False
 								self.jump_frames = 0
@@ -282,7 +293,8 @@ class mario(pygame.sprite.Sprite):
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
-								print "Collide bottom"
+								if DEBUG:
+									print "Collide bottom"
 								self.y_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -293,7 +305,8 @@ class mario(pygame.sprite.Sprite):
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
-								print "Collide right"
+								if DEBUG:
+									print "Collide right"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -302,7 +315,8 @@ class mario(pygame.sprite.Sprite):
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
-								print "Collide left"
+								if DEBUG:
+									print "Collide left"
 								self.x_vel = 0
 								self.jumped = True
 								self.jump_frames = 0
@@ -347,7 +361,7 @@ highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
 pygame.mixer.music.load("sounds/Five Armies.mp3")
-#pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.play(-1)#infinite loop
 
 #Load Joysticks
 pygame.joystick.init()
@@ -366,6 +380,13 @@ for i in range(0,pygame.joystick.get_count()):
 	xspeed.append(0)
 	jumping.append(False)
 	players.append(totalplayers[i])
+	
+#Add a keyboard player
+if len(players) < 4:
+	keyboard_player1 = len(players)
+	players.append(totalplayers[keyboard_player1])
+	xspeed.append(0)
+	jumping.append(False)
 	
 xtolerance=0.05
 stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
@@ -393,25 +414,64 @@ while running:
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
+			
 			if event.key == K_ESCAPE:
 				running = False
+				
+			#Toggle debug mode
+			elif event.key == K_BACKQUOTE:
+				if DEBUG == False:
+					DEBUG = True
+					print "Debug Mode Enabled."
+				elif DEBUG == True:
+					DEBUG = False
+					print "Debug Mode Disabled."
+			
+			#Adjust Music Volume	
+			elif event.key == K_PAGEUP:
+				volumeChange(0.2)
+			elif event.key == K_PAGEDOWN:
+				volumeChange(-0.2)
+			
+			#SAVE PLATFORMS
 			elif event.key == K_1:
-			#Save all platform positions in map
 				saved_platforms = []
 				for p in platforms:
 					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
 				saveLevel(saved_platforms,raw_input("What level name to save as? "))
+				
+			#LOAD PLATFORMS
 			elif event.key == K_2:
-			#Load all platform positions in map
 				del platforms
 				platform_pos = chooseLevel()
 				platforms = pygame.sprite.Group()
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
+					
+			#Keyboard Player 1
+			elif event.key == K_w:
+				jumping[keyboard_player1] = True
+			
+			elif event.key == K_a:
+				xspeed[keyboard_player1] = -1
+				
+			elif event.key == K_d:
+				xspeed[keyboard_player1] = 1			
+			
+		elif event.type == KEYUP:
+			
+			#Keyboard Player 1
+			if event.key == K_a or event.key == K_d:
+				xspeed[keyboard_player1]=0		
+			elif event.key == K_w:
+				jumping[keyboard_player1] = False
+
 		if event.type == QUIT:
 			pygame.quit()
 			sys.exit()
+		
+		
 		elif event.type == JOYBUTTONDOWN:
 			for controller in enumerate(joysticks):
 				i = controller[0]

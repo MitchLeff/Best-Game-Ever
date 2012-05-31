@@ -33,6 +33,7 @@ pygame.display.set_caption("Multiplayer Arena Test")
 #LOAD SOUNDS
 sfx = pygame.mixer.Channel(0)
 announcer = pygame.mixer.Channel(1)
+guns = pygame.mixer.Channel(2)
 
 die_sound = pygame.mixer.Sound("sounds/die.wav")
 jump_sound = pygame.mixer.Sound("sounds/jump.wav")
@@ -601,7 +602,7 @@ while running:
 			elif event.key == K_SPACE:
 				for m in players[keyboard_player1]:
 					m.shoot(10,m.xdirection*5)
-				shoot.play()
+				guns.play(shoot)
 			
 			#Keyboard Player 2
 			elif event.key == K_UP:
@@ -616,7 +617,7 @@ while running:
 			elif event.key == K_SLASH:
 				for m in players[keyboard_player2]:
 					m.shoot(10,m.xdirection*5)#10 is dmg
-				shoot.play()
+				guns.play(shoot)
 				
 		elif event.type == KEYUP:
 			
@@ -649,11 +650,11 @@ while running:
 			elif event.button == firebuttonleft:
 				for m in marios1:
 					m.shoot(5,-5)
-				shoot.play()
+				guns.play(shoot)
 			elif event.button == firebuttonright:
 				for m in marios1:
 					m.shoot(5,5)
-				shoot.play()
+				guns.play(shoot)
 				
 		elif event.type == JOYBUTTONUP:
 			for controller in enumerate(joysticks):
