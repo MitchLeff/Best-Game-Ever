@@ -240,7 +240,7 @@ class bullet(pygame.sprite.Sprite):
 								self.collided = True
 		for player in players:
 			for m in player:
-					#*4*
+					#*3*
 					if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
 					abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
 						if pygame.sprite.collide_mask(m, self):
@@ -266,7 +266,7 @@ class grenade(pygame.sprite.Sprite):
 		self.max_speed_y = MAX_SPEED_Y
 		
 		self.accell = 0.1
-		self.friction = 0.25#Possibly / by FPS for more realism --> test
+		self.friction = 0.10
 		
 		self.natural_accell = self.accell/2
 		
@@ -358,7 +358,7 @@ class grenade(pygame.sprite.Sprite):
 		#*5*
 		for p in platforms:
 			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:#Check this code
-				if pygame.sprite.collide_mask(p, m):
+				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							
 							#Top collision
@@ -366,7 +366,7 @@ class grenade(pygame.sprite.Sprite):
 							self.rect.bottom >= p.rect.top:
 								if DEBUG:
 									print "Collide top"
-								#self.rect.bottom = p.rect.top
+								self.rect.bottom = p.rect.top
 								self.collided = True
 								self.bounce("vert")
 
@@ -375,7 +375,7 @@ class grenade(pygame.sprite.Sprite):
 							self.rect.top <= p.rect.bottom:
 								if DEBUG:
 									print "Collide bottom"
-								#self.rect.top = p.rect.bottom
+								self.rect.top = p.rect.bottom
 								self.collided = True
 								self.bounce("vert")
 						
@@ -406,8 +406,8 @@ class grenade(pygame.sprite.Sprite):
 			self.y_vel *= -self.elasticity
 		if bounce_dir=="horiz":
 			self.x_vel *= -self.elasticity#*5*
-		if DEBUG:
-			print "Grenade speed (x,y): %s" %self.x_vel,self.y_vel
+		#if DEBUG:
+			#print "Grenade speed (x,y): %s" %self.x_vel,self.y_vel
 		
 class mario(pygame.sprite.Sprite):
 	def __init__(self):
@@ -546,7 +546,7 @@ class mario(pygame.sprite.Sprite):
 		#PLATFORM COLLISIONS
 		for p in platforms:
 			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
-				if pygame.sprite.collide_mask(p, m):
+				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							
 							#Top collision
@@ -888,15 +888,16 @@ while running:
 	#1.3 - Added grenades
 	
 	#1.4 - Grenades bounce (but not enough)
+	
+	#1.5 - Grenades have friction
+	
+	#1.6 - Grenade and player collisions fixed
 
-#Bugs:
+#BUGS:
 
-	#*1* keyboard_player1 has no platform collision detection
-	#*2* Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
-	#*3* keyboard_player2 has infinite jump loop
-	#*4* each bullet hits player 3-5 times 
-	#*5* Collisions with platforms broken for grenades --> same code as mario
- 
+	#*1* Bullets only die on top half of platforms --> check collision code, probably same problem as mario jump-ducking
+	#*2* keyboard_player2 has infinite jump loop
+	#*3* each bullet hits player 3-5 times 
 
 #TO ADD:
 
