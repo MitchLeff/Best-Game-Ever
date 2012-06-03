@@ -52,6 +52,7 @@ mario_jump = (pygame.image.load("images/mario_jump.png").convert_alpha())
 mario_walk1 = (pygame.image.load("images/mario_walk1.png").convert_alpha())
 mario_walk2 = (pygame.image.load("images/mario_walk2.png").convert_alpha())
 mario_walk3 = (pygame.image.load("images/mario_walk3.png").convert_alpha())
+
 MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario_walk3, mario_walk2]
 
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
@@ -598,7 +599,6 @@ while running:
 
 	#Up to quad-jumping possible with proper timing
 	#Sprite direction defaults to right-facing always
-	#Can get stuck on edges of platforms
 	#Mario can jump-duck through platforms (best demonstrated on "Maze.map")
 	
 #TO ADD:
