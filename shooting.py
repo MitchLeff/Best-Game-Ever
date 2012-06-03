@@ -910,7 +910,6 @@ while running:
 				elif event.button == firebuttonleft:
 					for m in players[i]:
 						m.throw()
-					guns.play(grenade)
 				
 			if event.button == quitbutton:
 				pygame.quit()
@@ -922,8 +921,12 @@ while running:
 				jumping[i] = controller[1].get_button(jumpbutton)
 				for m in players[i]:
 					if event.button == firebuttonleft:
-						players[i].throw()
-						guns.play(grenade)
+						m.throw()
+						
+		elif event.type == JOYAXISMOTION:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				xspeed[i] = controller[1].get_axis(0)
 					
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = platform(event.pos)
