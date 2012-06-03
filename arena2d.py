@@ -598,7 +598,6 @@ while running:
 
 	#Up to quad-jumping possible with proper timing
 	#Sprite direction defaults to right-facing always
-	#Can get stuck on edges of platforms
 	#Mario can jump-duck through platforms (best demonstrated on "Maze.map")
 	
 #TO ADD:

@@ -266,6 +266,7 @@ class grenade(pygame.sprite.Sprite):
 		self.max_speed_y = MAX_SPEED_Y
 		
 		self.accell = 0.1
+		self.friction = 0.25#Possibly / by FPS for more realism --> test
 		
 		self.natural_accell = self.accell/2
 		
@@ -283,6 +284,12 @@ class grenade(pygame.sprite.Sprite):
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
 		
+		#Apply friction
+		if self.collided:
+			self.x_accell = -self.x_vel*self.friction
+		elif not self.collided:
+			self.x_accell = 0
+			
 		self.x_vel += self.x_accell
 		self.y_vel += self.y_accell
 		
@@ -337,7 +344,8 @@ class grenade(pygame.sprite.Sprite):
 		if self.rect.bottom >= height:
 			self.rect.bottom = height-1
 			self.bounce("vert")
-
+			self.collided = True
+			
 		if self.rect.left < 0:
 			self.rect.left = 1
 			self.bounce("horiz")
@@ -361,7 +369,7 @@ class grenade(pygame.sprite.Sprite):
 								#self.rect.bottom = p.rect.top
 								self.collided = True
 								self.bounce("vert")
-							
+
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
