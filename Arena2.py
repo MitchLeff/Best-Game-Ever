@@ -231,251 +231,247 @@ class mario(pygame.sprite.Sprite):
 		if DEBUG:
 			print item.rect.midbottom
 
+highscore = 0
+score = 0
+running = True
+cycles = 0
 
-def main():
-	highscore = 0
-	score = 0
-	running = True
-	cycles = 0
+scoreFont = pygame.font.SysFont('ocraextended', 26)
+scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
+highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
-	scoreFont = pygame.font.SysFont('ocraextended', 26)
-	scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
-	highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
+#START MUSICS
+pygame.mixer.music.load("sounds/Five Armies.mp3")
+pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.set_volume(0)
 
-	#START MUSICS
-	pygame.mixer.music.load("sounds/Five Armies.mp3")
-	pygame.mixer.music.play(-1)#infinite loop
-	pygame.mixer.music.set_volume(0)
+pygame.joystick.init()
+joysticks = []
+xspeed = []
+jumping = []
+marios1 = pygame.sprite.Group(mario())
+marios2 = pygame.sprite.Group(mario())
+marios3 = pygame.sprite.Group(mario())
+marios4 = pygame.sprite.Group(mario())
+totalplayers = [marios1,marios2,marios3,marios4]
+players = []
 
-	pygame.joystick.init()
-	joysticks = []
-	xspeed = []
-	jumping = []
-	marios1 = pygame.sprite.Group(mario())
-	marios2 = pygame.sprite.Group(mario())
-	marios3 = pygame.sprite.Group(mario())
-	marios4 = pygame.sprite.Group(mario())
-	totalplayers = [marios1,marios2,marios3,marios4]
-	players = []
+for i in range(0,pygame.joystick.get_count()):
+	joysticks.append(pygame.joystick.Joystick(i))
+	joysticks[i].init()
+	xspeed.append(0)
+	jumping.append(False)
+	players.append(totalplayers[i])
 
-	for i in range(0,pygame.joystick.get_count()):
-		joysticks.append(pygame.joystick.Joystick(i))
-		joysticks[i].init()
-		xspeed.append(0)
-		jumping.append(False)
-		players.append(totalplayers[i])
+#Add keyboard players
+if len(players) < 4:
+	keyboard_player1 = len(players)
+	players.append(totalplayers[keyboard_player1]) #If no players, add one player
+	xspeed.append(0)
+	jumping.append(False)
+
+if len(players) < 4:
+	keyboard_player2 = len(players)
+	players.append(totalplayers[keyboard_player2]) #add a second keyboard player
+	xspeed.append(0)
+	jumping.append(False)
+
+#MAIN GAME LOOP
+while running:
+	clock.tick(FPS)
+
+	pressed = pygame.key.get_pressed()
+
 	
-	#Add keyboard players
-	if len(players) < 4:
-		keyboard_player1 = len(players)
-		players.append(totalplayers[keyboard_player1]) #If no players, add one player
-		xspeed.append(0)
-		jumping.append(False)
-	
-	if len(players) < 4:
-		keyboard_player2 = len(players)
-		players.append(totalplayers[keyboard_player2]) #add a second keyboard player
-		xspeed.append(0)
-		jumping.append(False)
-	
-	#MAIN GAME LOOP
-	while running:
-		clock.tick(FPS)
+	DOWN = pressed[274]
+	RIGHT = pressed[275]
+	LEFT = pressed[276]
+	Yax = 1
+	Xax = 0
 
-		pressed = pygame.key.get_pressed()
+	for event in pygame.event.get():
 	
+		if event.type == KEYDOWN:
+			pressed = pygame.key.get_pressed()
 		
-		DOWN = pressed[274]
-		RIGHT = pressed[275]
-		LEFT = pressed[276]
-		Yax = 1
-		Xax = 0
-	
-		for event in pygame.event.get():
+			if event.key == K_ESCAPE:
+				running = False
+			
+			#Toggle debug mode
+			elif event.key == K_BACKQUOTE:
+				if DEBUG == False:
+					DEBUG = True
+					print "Debug Mode Enabled."
+				elif DEBUG == True:
+					DEBUG = False
+					print "Debug Mode Disabled."
 		
-			if event.type == KEYDOWN:
-				pressed = pygame.key.get_pressed()
-			
-				if event.key == K_ESCAPE:
-					running = False
+			#Adjust Music Volume	
+			elif event.key == K_PAGEUP:
+				volumeChange(0.2)
+			elif event.key == K_PAGEDOWN:
+				volumeChange(-0.2)
 				
-				#Toggle debug mode
-				elif event.key == K_BACKQUOTE:
-					if DEBUG == False:
-						DEBUG = True
-						print "Debug Mode Enabled."
-					elif DEBUG == True:
-						DEBUG = False
-						print "Debug Mode Disabled."
+			#SAVE PLATFORMS
+			elif event.key == K_1:
+				saved_platforms = []
+				for p in platforms:
+					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
+				saveLevel(saved_platforms,raw_input("What level name to save as? "))
+		
+			#LOAD PLATFORMS
+			elif event.key == K_2:
+				del platforms
+				platform_pos = chooseLevel()
+				platforms = pygame.sprite.Group()
+				for pos in platform_pos:
+					newp = platform(pos)
+					platforms.add(newp)
+		
+			#Keyboard Player 1
+			elif event.key == K_w:
+				jumping[keyboard_player1] = True
+		
+			elif event.key == K_a:
+				xspeed[keyboard_player1] = -1
 			
-				#Adjust Music Volume	
-				elif event.key == K_PAGEUP:
-					volumeChange(0.2)
-				elif event.key == K_PAGEDOWN:
-					volumeChange(-0.2)
-					
-				#SAVE PLATFORMS
-				elif event.key == K_1:
-					saved_platforms = []
-					for p in platforms:
-						saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
-					saveLevel(saved_platforms,raw_input("What level name to save as? "))
+			elif event.key == K_d:
+				xspeed[keyboard_player1] = 1
+		
+			elif event.key == K_SPACE:
+				for m in players[keyboard_player1]:
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(BULLET_SPEED))
+				guns.play(shoot)
 			
-				#LOAD PLATFORMS
-				elif event.key == K_2:
-					del platforms
-					platform_pos = chooseLevel()
-					platforms = pygame.sprite.Group()
-					for pos in platform_pos:
-						newp = platform(pos)
-						platforms.add(newp)
+			elif event.key == K_LSHIFT:
+				for m in players[keyboard_player1]:
+					m.throw(players)
+		
+			#Keyboard Player 2
+			elif event.key == K_UP:
+				jumping[keyboard_player2] = True
+		
+			elif event.key == K_LEFT:
+				xspeed[keyboard_player2] = -1
 			
-				#Keyboard Player 1
-				elif event.key == K_w:
-					jumping[keyboard_player1] = True
+			elif event.key == K_RIGHT:
+				xspeed[keyboard_player2] = 1
+		
+			elif event.key == K_SLASH:
+				for m in players[keyboard_player2]:
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+				guns.play(shoot)
 			
-				elif event.key == K_a:
-					xspeed[keyboard_player1] = -1
-				
-				elif event.key == K_d:
-					xspeed[keyboard_player1] = 1
+			elif event.key == K_PERIOD:
+				for m in players[keyboard_player2]:
+					m.throw(players)
 			
-				elif event.key == K_SPACE:
-					for m in players[keyboard_player1]:
-						m.shoot(players,BULLET_DAMAGE,m.xdirection*(BULLET_SPEED))
-					guns.play(shoot)
-				
-				elif event.key == K_LSHIFT:
-					for m in players[keyboard_player1]:
-						m.throw(players)
+		elif event.type == KEYUP:
+		
+			#Keyboard Player 1
+			if event.key == K_a or event.key == K_d:
+				xspeed[keyboard_player1]=0		
+			if event.key == K_w:
+				jumping[keyboard_player1] = False
+			if event.key == K_LSHIFT:
+				for m in players[keyboard_player1]:
+					try:
+						m.grenade.cooking = False
+					except:
+						break
+		
+			#Keyboard Player 2
+			if event.key == K_LEFT or event.key == K_RIGHT:
+				xspeed[keyboard_player2]=0
+			if event.key == K_UP:
+				jumping[keyboard_player2]=False
+			if event.key == K_PERIOD:
+				for m in players[keyboard_player2]:
+					try:
+						m.grenade.cooking = False
+					except:
+						break
 			
-				#Keyboard Player 2
-				elif event.key == K_UP:
-					jumping[keyboard_player2] = True
 			
-				elif event.key == K_LEFT:
-					xspeed[keyboard_player2] = -1
-				
-				elif event.key == K_RIGHT:
-					xspeed[keyboard_player2] = 1
-			
-				elif event.key == K_SLASH:
-					for m in players[keyboard_player2]:
+		#QUIT
+		if event.type == QUIT:
+			pygame.quit()
+			sys.exit()
+	
+		#JOYSTICK CONTROLS
+		elif event.type == JOYBUTTONDOWN:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				jumping[i] = controller[1].get_button(jumpbutton)
+				if event.button == firebuttonright:#***#finish converting controls
+					for m in players[i]:
 						m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
 					guns.play(shoot)
-				
-				elif event.key == K_PERIOD:
-					for m in players[keyboard_player2]:
+				elif event.button == firebuttonleft:
+					for m in players[i]:
 						m.throw(players)
-				
-			elif event.type == KEYUP:
 			
-				#Keyboard Player 1
-				if event.key == K_a or event.key == K_d:
-					xspeed[keyboard_player1]=0		
-				if event.key == K_w:
-					jumping[keyboard_player1] = False
-				if event.key == K_LSHIFT:
-					for m in players[keyboard_player1]:
-						try:
-							m.grenade.cooking = False
-						except:
-							break
-			
-				#Keyboard Player 2
-				if event.key == K_LEFT or event.key == K_RIGHT:
-					xspeed[keyboard_player2]=0
-				if event.key == K_UP:
-					jumping[keyboard_player2]=False
-				if event.key == K_PERIOD:
-					for m in players[keyboard_player2]:
-						try:
-							m.grenade.cooking = False
-						except:
-							break
-				
-				
-			#QUIT
-			if event.type == QUIT:
+			if event.button == quitbutton:
 				pygame.quit()
 				sys.exit()
-		
-			#JOYSTICK CONTROLS
-			elif event.type == JOYBUTTONDOWN:
-				for controller in enumerate(joysticks):
-					i = controller[0]
-					jumping[i] = controller[1].get_button(jumpbutton)
-					if event.button == firebuttonright:#***#finish converting controls
-						for m in players[i]:
-							m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
-						guns.play(shoot)
-					elif event.button == firebuttonleft:
-						for m in players[i]:
-							m.throw(players)
-				
-				if event.button == quitbutton:
-					pygame.quit()
-					sys.exit()
-				
-			elif event.type == JOYBUTTONUP:
-				for controller in enumerate(joysticks):
-					i = controller[0]
-					jumping[i] = controller[1].get_button(jumpbutton)
-					for m in players[i]:
-						if event.button == firebuttonleft:
-							m.throw(players)
-						
-			elif event.type == JOYAXISMOTION:
-				for controller in enumerate(joysticks):
-					i = controller[0]
-					xspeed[i] = controller[1].get_axis(0)
+			
+		elif event.type == JOYBUTTONUP:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				jumping[i] = controller[1].get_button(jumpbutton)
+				for m in players[i]:
+					if event.button == firebuttonleft:
+						m.throw(players)
 					
-			elif event.type == MOUSEBUTTONDOWN:
-				newp = platform(event.pos)
-				platforms.add(newp)
-				screen.blit(newp.image,newp.rect)
+		elif event.type == JOYAXISMOTION:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				xspeed[i] = controller[1].get_axis(0)
+				
+		elif event.type == MOUSEBUTTONDOWN:
+			newp = platform(event.pos)
+			platforms.add(newp)
+			screen.blit(newp.image,newp.rect)
 
-		for controller in enumerate(joysticks):
-			i = controller[0]
-			if abs(xspeed[i]) <= xtolerance:#prevents micro-movements
-				xspeed[i]=0
-	
-		for player in enumerate(players):
-			i=player[0]
-			player[1].update(xspeed[i],jumping[i])
-		
-		platforms.update()
-	
-		screen.blit(background_image, (0,0))
-		#Draw Marios
-		for player in players:
-			#Check for respawn
-			if len(player) == 0:
-				player.add(mario())
-			for m in player:
-				screen.blit(m.image, m.rect)
-	
-		#Draw Plaforms
-		for p in platforms.sprites():
-			screen.blit(p.image,p.rect)
-		
-		#Draw and Update Bullets
-		for b in bullets:
-			b.update(platforms,players)
-			screen.blit(b.image, b.rect)
+	for controller in enumerate(joysticks):
+		i = controller[0]
+		if abs(xspeed[i]) <= xtolerance:#prevents micro-movements
+			xspeed[i]=0
 
-		#Update and Draw Grenades
-		for g in grenades:
-			g.update(platforms,players)
-			screen.blit(g.image, g.rect)
-
-		screen.blit(scoreText, (0,0))
-		screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
-		pygame.display.update()
+	for player in enumerate(players):
+		i=player[0]
+		player[1].update(xspeed[i],jumping[i])
 	
-		cycles += 1
-		
-main()
+	platforms.update()
+
+	screen.blit(background_image, (0,0))
+	#Draw Marios
+	for player in players:
+		#Check for respawn
+		if len(player) == 0:
+			player.add(mario())
+		for m in player:
+			screen.blit(m.image, m.rect)
+
+	#Draw Plaforms
+	for p in platforms.sprites():
+		screen.blit(p.image,p.rect)
+	
+	#Draw and Update Bullets
+	for b in bullets:
+		b.update(platforms,players)
+		screen.blit(b.image, b.rect)
+
+	#Update and Draw Grenades
+	for g in grenades:
+		g.update(platforms,players)
+		screen.blit(g.image, g.rect)
+
+	screen.blit(scoreText, (0,0))
+	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
+	pygame.display.update()
+
+	cycles += 1
 
 #Version History
 
