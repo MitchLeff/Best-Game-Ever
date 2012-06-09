@@ -9,3 +9,4 @@ import pygame
 platforms = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 grenades = pygame.sprite.Group()
+points = pygame.sprite.Group()
