@@ -40,14 +40,13 @@ combo3 = pygame.mixer.Sound("sounds/godlike.wav")
 combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
 
 #LOAD IMAGES
-background_image = (pygame.image.load("images/coachBig.png").convert_alpha())
+background_image = (pygame.image.load("images/spaceSmall.jpg").convert_alpha())
 
-mario_still = (pygame.image.load("images/mario_still.png").convert_alpha())
-mario_jump = (pygame.image.load("images/mario_jump.png").convert_alpha())
-mario_walk1 = (pygame.image.load("images/mario_walk1.png").convert_alpha())
-mario_walk2 = (pygame.image.load("images/mario_walk2.png").convert_alpha())
-mario_walk3 = (pygame.image.load("images/mario_walk3.png").convert_alpha())
-MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario_walk3, mario_walk2]
+sniper = (pygame.image.load("images/sniper.png").convert_alpha())
+engineer = (pygame.image.load("images/engineer.png").convert_alpha())
+soldier = (pygame.image.load("images/soldier.png").convert_alpha())
+medic = (pygame.image.load("images/medic.png").convert_alpha())
+PLAYER_SPRITE_OPTIONS = [sniper,engineer,soldier,medic]
 
 #WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())

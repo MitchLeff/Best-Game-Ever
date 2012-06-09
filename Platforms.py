@@ -1,5 +1,6 @@
 #!usr/bin/python
 import pygame
+from Constants import *
 #Platforms Class
 class platform(pygame.sprite.Sprite):
 	def __init__(self,pos):
