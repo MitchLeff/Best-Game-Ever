@@ -886,7 +886,6 @@ while running:
 				jumping[keyboard_player2]=False
 			if event.key == K_PERIOD:
 				for m in players[keyboard_player2]:
-					m.grenade.cooking = False
 					try:
 						m.grenade.cooking = False
 					except:
