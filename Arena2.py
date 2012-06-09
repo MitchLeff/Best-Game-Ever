@@ -15,7 +15,6 @@ from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
 from Platforms import *
-from Player import *
 from Projectiles import *
 
 def br(lines=1):
@@ -598,7 +597,7 @@ class mario(pygame.sprite.Sprite):
 								self.collided = True
 		return self.collided
 		
-	def shoot(self,bullets,players,dmg,speed):
+	def shoot(self,players,dmg,speed):
 		if self.xdirection>0:#facing right
 			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit mario while running
 			bullet_dir = 1
@@ -608,7 +607,7 @@ class mario(pygame.sprite.Sprite):
 		shot = bullet(players,bullet_dir,(direction,self.rect.top+self.rect.height/2),dmg,speed)
 		bullets.add(shot)
 		
-	def throw(self,grenades,players):
+	def throw(self,players):
 		if self.xdirection>0:#facing right
 			direction = self.rect.right
 			grenade_dir = 1
@@ -754,7 +753,7 @@ while running:
 				
 			elif event.key == K_LSHIFT:
 				for m in players[keyboard_player1]:
-					m.throw(grenades,players)
+					m.throw(players)
 			
 			#Keyboard Player 2
 			elif event.key == K_UP:
@@ -768,7 +767,7 @@ while running:
 			
 			elif event.key == K_SLASH:
 				for m in players[keyboard_player2]:
-					m.shoot(bullets,players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
 				guns.play(shoot)
 				
 			elif event.key == K_PERIOD:
@@ -849,7 +848,7 @@ while running:
 	
 	for player in enumerate(players):
 		i=player[0]
-		player[1].update(platforms,xspeed[i],jumping[i])
+		player[1].update(xspeed[i],jumping[i])
 		
 	platforms.update()
 	
