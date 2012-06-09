@@ -6,73 +6,17 @@
 #
 #Version = '2.0'
 
-#CONSTANTS
-FPS = 60
-GRAVITY = .8
-MIN_SPEED = 2
-MAX_SPEED = 4
-DEATH_TIMER = 40
-FLOATING_TEXT_LIFESPAN = 70
-MAX_SPEED_X = 9
-MAX_SPEED_Y = 15
-DEBUG = True
-
 #IMPORTS
 import pygame, random, sys, glob, pickle, sprite_sheet_loader
 from pygame.locals import *
 from glob import glob#glob allows use of wildcard for reading filenames
+
 from sprite_sheet_loader import *
-
-clock = pygame.time.Clock()
-pygame.init()
-pygame.font.init()
-pygame.mixer.init()
-pygame.display.set_mode()
-pygame.mouse.set_visible(True)
-pygame.display.set_caption("Multiplayer Arena Test")
-
+from Constants import *
+from ObjectLists import *
 from projectiles import *
+from platforms import *
 
-#LOAD SOUNDS
-sfx = pygame.mixer.Channel(0)
-announcer = pygame.mixer.Channel(1)
-guns = pygame.mixer.Channel(2)
-
-die_sound = pygame.mixer.Sound("sounds/die.wav")
-jump_sound = pygame.mixer.Sound("sounds/jump.wav")
-stomp_sound = pygame.mixer.Sound("sounds/stomp.wav")
-shoot = pygame.mixer.Sound("sounds/shoot.wav")
-hurt = pygame.mixer.Sound("sounds/hurt.wav")
-explosion = pygame.mixer.Sound("sounds/explosion.wav")
-
-combo0 = pygame.mixer.Sound("sounds/killingspree.wav")
-combo1 = pygame.mixer.Sound("sounds/rampage.wav")
-combo2 = pygame.mixer.Sound("sounds/unstoppable.wav")
-combo3 = pygame.mixer.Sound("sounds/godlike.wav")
-combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
-
-#LOAD IMAGES
-background_image = (pygame.image.load("images/coachBig.png").convert_alpha())
-
-#PLAYER IMAGES
-mario_still = (pygame.image.load("images/mario_still.png").convert_alpha())
-mario_jump = (pygame.image.load("images/mario_jump.png").convert_alpha())
-mario_walk1 = (pygame.image.load("images/mario_walk1.png").convert_alpha())
-mario_walk2 = (pygame.image.load("images/mario_walk2.png").convert_alpha())
-mario_walk3 = (pygame.image.load("images/mario_walk3.png").convert_alpha())
-MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario_walk3, mario_walk2]
-
-#ENEMY IMAGES
-bill_image = pygame.image.load("images/bill.png").convert_alpha()
-
-#PLATFORM IMAGES
-platform_img = pygame.image.load("images/platform.png").convert_alpha()
-
-width  = max(200,background_image.get_width())
-height = max(300,background_image.get_height())
-size   = [width, height]
-screen = pygame.display.set_mode(size)
-background = pygame.Surface(screen.get_size())
 
 def br(lines=1):
 	for i in range(0,lines):
@@ -654,7 +598,7 @@ class mario(pygame.sprite.Sprite):
 								self.collided = True
 		return self.collided
 		
-	def shoot(self,dmg,speed):
+	def shoot(self,players,dmg,speed):
 		global bullets
 		if self.xdirection>0:#facing right
 			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit mario while running
@@ -662,10 +606,10 @@ class mario(pygame.sprite.Sprite):
 		elif self.xdirection<0:#facing left
 			direction = self.rect.left-self.max_speed_x-10
 			bullet_dir = -1
-		shot = bullet((direction,self.rect.top+self.rect.height/2),bullet_dir,dmg,speed)
+		shot = bullet(players,bullet_dir,(direction,self.rect.top+self.rect.height/2),dmg,speed)
 		bullets.add(shot)
 		
-	def throw(self):
+	def throw(self,players):
 		global grenades
 		if self.xdirection>0:#facing right
 			direction = self.rect.right
@@ -673,7 +617,7 @@ class mario(pygame.sprite.Sprite):
 		elif self.xdirection<0:
 			direction = self.rect.left
 			grenade_dir = -1
-		item = grenade(grenade_dir,(direction,self.rect.top+self.rect.height/2),\
+		item = grenade(players,grenade_dir,(direction,self.rect.top+self.rect.height/2),\
 		abs(self.x_vel)+GRENADE_VELOCITY,GRENADE_VELOCITY)
 		self.grenade = item
 		item.player = self
@@ -694,18 +638,8 @@ class point(pygame.sprite.Sprite):
 		self.life -= 1
 		if self.life <= 0:
 			self.kill()
-			
-class platform(pygame.sprite.Sprite):
-	def __init__(self,pos):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = platform_img
-		self.rect = self.image.get_rect()
-		self.rect.midbottom = pos	
 
 points = pygame.sprite.Group()
-platforms = pygame.sprite.Group()
-bullets = pygame.sprite.Group()
-grenades = pygame.sprite.Group()
 
 highscore = 0
 score = 0
@@ -753,17 +687,6 @@ if len(players) < 4:
 	xspeed.append(0)
 	jumping.append(False)
 	
-xtolerance=0.05
-stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
-
-#CONTROL VARIABLES
-firebuttonleft = 4
-firebuttonright = 5
-fireleft = False
-fireright = False
-jumpbutton = 0#A
-quitbutton = 6#6 is back button
-
 #MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
@@ -828,12 +751,12 @@ while running:
 			
 			elif event.key == K_SPACE:
 				for m in players[keyboard_player1]:
-					m.shoot(BULLET_DAMAGE,m.xdirection*(BULLET_SPEED))
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(BULLET_SPEED))
 				guns.play(shoot)
 				
 			elif event.key == K_LSHIFT:
 				for m in players[keyboard_player1]:
-					m.throw()
+					m.throw(players)
 			
 			#Keyboard Player 2
 			elif event.key == K_UP:
@@ -847,12 +770,12 @@ while running:
 			
 			elif event.key == K_SLASH:
 				for m in players[keyboard_player2]:
-					m.shoot(BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
 				guns.play(shoot)
 				
 			elif event.key == K_PERIOD:
 				for m in players[keyboard_player2]:
-					m.throw()
+					m.throw(players)
 				
 		elif event.type == KEYUP:
 			
@@ -893,11 +816,11 @@ while running:
 				jumping[i] = controller[1].get_button(jumpbutton)
 				if event.button == firebuttonright:#***#finish converting controls
 					for m in players[i]:
-						m.shoot(BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+						m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
 					guns.play(shoot)
 				elif event.button == firebuttonleft:
 					for m in players[i]:
-						m.throw()
+						m.throw(players)
 				
 			if event.button == quitbutton:
 				pygame.quit()
@@ -909,7 +832,7 @@ while running:
 				jumping[i] = controller[1].get_button(jumpbutton)
 				for m in players[i]:
 					if event.button == firebuttonleft:
-						m.throw()
+						m.throw(players)
 						
 		elif event.type == JOYAXISMOTION:
 			for controller in enumerate(joysticks):
@@ -947,12 +870,12 @@ while running:
 		
 	#Draw and Update Bullets
 	for b in bullets:
-		b.update()
+		b.update(platforms,players)
 		screen.blit(b.image, b.rect)
 
 	#Update and Draw Grenades
 	for g in grenades:
-		g.update()
+		g.update(platforms,players)
 		screen.blit(g.image, g.rect)
 
 	screen.blit(scoreText, (0,0))
