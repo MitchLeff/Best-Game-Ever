@@ -14,9 +14,9 @@ from glob import glob#glob allows use of wildcard for reading filenames
 from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
-from projectiles import *
-from platforms import *
-
+from Platforms import *
+from Player import *
+from Projectiles import *
 
 def br(lines=1):
 	for i in range(0,lines):
@@ -408,7 +408,7 @@ class grenade(pygame.sprite.Sprite):
 							self.collided = True
 							hurt.play()
 							return self.collided"""
-		
+			
 class mario(pygame.sprite.Sprite):
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
@@ -598,8 +598,7 @@ class mario(pygame.sprite.Sprite):
 								self.collided = True
 		return self.collided
 		
-	def shoot(self,players,dmg,speed):
-		global bullets
+	def shoot(self,bullets,players,dmg,speed):
 		if self.xdirection>0:#facing right
 			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit mario while running
 			bullet_dir = 1
@@ -609,8 +608,7 @@ class mario(pygame.sprite.Sprite):
 		shot = bullet(players,bullet_dir,(direction,self.rect.top+self.rect.height/2),dmg,speed)
 		bullets.add(shot)
 		
-	def throw(self,players):
-		global grenades
+	def throw(self,grenades,players):
 		if self.xdirection>0:#facing right
 			direction = self.rect.right
 			grenade_dir = 1
@@ -624,7 +622,7 @@ class mario(pygame.sprite.Sprite):
 		grenades.add(item)
 		if DEBUG:
 			print item.rect.midbottom
-			
+
 pointFont = pygame.font.SysFont('ocraextended',24)
 class point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):
@@ -756,7 +754,7 @@ while running:
 				
 			elif event.key == K_LSHIFT:
 				for m in players[keyboard_player1]:
-					m.throw(players)
+					m.throw(grenades,players)
 			
 			#Keyboard Player 2
 			elif event.key == K_UP:
@@ -770,7 +768,7 @@ while running:
 			
 			elif event.key == K_SLASH:
 				for m in players[keyboard_player2]:
-					m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+					m.shoot(bullets,players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
 				guns.play(shoot)
 				
 			elif event.key == K_PERIOD:
@@ -851,7 +849,7 @@ while running:
 	
 	for player in enumerate(players):
 		i=player[0]
-		player[1].update(xspeed[i],jumping[i])
+		player[1].update(platforms,xspeed[i],jumping[i])
 		
 	platforms.update()
 	
