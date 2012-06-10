@@ -100,12 +100,18 @@ while running:
 			newp = platform(event.pos)
 			platforms.add(newp)
 			screen.blit(newp.image,newp.rect)
-
-	players.update(players.sprites(), platforms.sprites())
+	
+	for player in players.sprites():
+		actions = player.update(players.sprites(), platforms.sprites())
+		if actions['Bullet']:
+			bullets.add(actions['Bullet'])
+		if actions['Grenade']:
+			grenades.add(actions['Grenade'])
+		
 	platforms.update()
 
 	screen.blit(background_image, (0,0))
-	#Draw Marios
+	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, p.rect)
 

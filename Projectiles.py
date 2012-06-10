@@ -7,7 +7,9 @@ from ObjectLists import *
 
 class Bullet(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,damage,xvel,sprite=BULLET_SPRITE_OPTIONS):
-	
+		#Play creation sound
+		guns.play(shoot)
+		
 		#SPRITE
 		pygame.sprite.Sprite.__init__(self)
 		self.sprite_options = BULLET_SPRITE_OPTIONS
@@ -119,17 +121,16 @@ class Bullet(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								#self.rect.right = p.rect.left-1
 								self.collided = True
-		for player in players:
-			for m in player:
-					if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-					abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
-						if pygame.sprite.collide_mask(m, self):
-							m.health -= self.damage
-							if DEBUG:
-								print m.health
-							self.collided = True
-							hurt.play()
-							return self.collided
+		for m in players:
+			if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
+			abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
+				if pygame.sprite.collide_mask(m, self):
+					m.health -= self.damage
+					if DEBUG:
+						print m.health
+					self.collided = True
+					hurt.play()
+					return self.collided
 		
 class Grenade(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):
@@ -336,14 +337,13 @@ class Grenade(pygame.sprite.Sprite):
 		self.y_accell = 0
 		
 	def explode_collision(self,players):
-		for player in players:
-			for m in player:
-					if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-					abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
-						if pygame.sprite.collide_mask(m, self):
-							m.health -= self.damage/float(len(explosion_sprites))#adjust damage to do x dmg per sprite for a total of self.damage
-							if DEBUG:
-								print m.health
-							self.collided = True
-							hurt.play()
-							return self.collided
+		for m in players:
+			if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
+			abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
+				if pygame.sprite.collide_mask(m, self):
+					m.health -= self.damage/float(len(explosion_sprites))#adjust damage to do x dmg per sprite for a total of self.damage
+					if DEBUG:
+						print m.health
+					self.collided = True
+					hurt.play()
+					return self.collided

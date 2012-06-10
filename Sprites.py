@@ -1,5 +1,6 @@
 from Helpers import *
 from Constants import *
+from Projectiles import *
 import pygame, random, sys, glob, pickle
 
 init()
@@ -93,13 +94,22 @@ class Player(pygame.sprite.Sprite):
 		
 		self.step = 0
 		self.image_tempo = 6.0
+		
 		self.jumps_left = 0
-		self.jumping = False
+		self.jumped = False
+		
+		self.shooting = False
+		self.grenading = False
+		
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
-		self.health=100.0
-		
+		self.health = 100.0
+	
+	def resetJumps(self):
+		self.jumped = False
+		self.jumps_left = 2
+	
 	def update(self, players, platforms):
 		global width, height
 		#Joystack compatible
@@ -111,6 +121,7 @@ class Player(pygame.sprite.Sprite):
 		if self.health <= 0:
 			sfx.play(die_sound)
 			self.kill()
+			self.dead = True
 		
 		#Get direction being pressed and update accordingly
 		self.x_acceleration = state['L_R']*self.acceleration
@@ -119,11 +130,14 @@ class Player(pygame.sprite.Sprite):
 			self.xdirection = -1
 		elif self.x_acceleration > 0:
 			self.xdirection = 1
-			
-		if state['U_D'] == -1 and self.jumps_left > 0:
+		
+		if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
 			sfx.play(jump_sound)
-			self.y_vel = -10
-			self.jumping = True
+			self.y_vel = -18
+			self.jumped = True
+			self.jumps_left -= 1
+		if state['U_D'] != -1:
+			self.jumped = False
 
 		self.x_vel += self.x_acceleration
 		self.y_vel += self.y_acceleration
@@ -147,14 +161,6 @@ class Player(pygame.sprite.Sprite):
 			self.y_vel = self.max_speed_y
 		elif self.y_vel <= -1*self.max_speed_y:
 			self.y_vel = -1*self.max_speed_y
-		
-		#Perform other actions
-		if state['A']:
-			self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED))
-			guns.play(shoot)
-		
-		if state['B']:
-			self.throw(players)
 		
 		#Update position
 		if (self.x_vel<0):
@@ -188,13 +194,32 @@ class Player(pygame.sprite.Sprite):
 		if self.xdirection == -1:
 			self.image = pygame.transform.flip(self.image, True, False)
 		
+		#Perform other actions
+		actions = {'Bullet':None, 'Grenade':None}
+		if state['A'] and not self.shooting:
+			self.shooting = True
+			actions['Bullet'] = self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED))
+		elif not state['A']:
+			self.shooting = False
+		
+		if state['B'] and not self.grenading:
+			self.grenading = True
+			self.grenade = self.throw(players)
+			actions['Grenade'] = self.grenade
+		elif not state['B']:
+			try:
+				self.grenade.cooking = False
+			except:
+				pass
+			self.grenading = False
+		
+		return actions
+		
 	def collisioncheck(self, platforms):
 		self.collided = False
 		if self.rect.bottom >= height:
 			self.rect.bottom = height
-			self.jump_frames = 0
-			self.jumped = False
-			self.jumps_left = 2
+			self.resetJumps()
 		if self.rect.left < 0:
 			self.rect.left = 0
 			self.x_vel = 0
@@ -216,10 +241,9 @@ class Player(pygame.sprite.Sprite):
 								if DEBUG:
 									print "Collide top"
 								self.y_vel = 0
-								self.jumped = False
-								self.jump_frames = 0
 								self.rect.bottom = p.rect.top
 								self.collided = True
+								self.jumps_left = 2
 							
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
@@ -227,11 +251,10 @@ class Player(pygame.sprite.Sprite):
 								if DEBUG:
 									print "Collide bottom"
 								self.y_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
+								self.jumps_left = 2
+								self.jumped = False
 								self.rect.top = p.rect.bottom
 								self.collided = True
-								self.jumps_left = 2
 						
 						if self.rect.bottom >= p.rect.top+stair_tolerance and\
 						self.rect.top <= p.rect.bottom:
@@ -242,8 +265,6 @@ class Player(pygame.sprite.Sprite):
 								if DEBUG:
 									print "Collide right"
 								self.x_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
 								self.rect.left = p.rect.right+1
 								self.collided = True
 							
@@ -253,8 +274,6 @@ class Player(pygame.sprite.Sprite):
 								if DEBUG:
 									print "Collide left"
 								self.x_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
 								self.rect.right = p.rect.left-1
 								self.collided = True
 		return self.collided
@@ -267,7 +286,7 @@ class Player(pygame.sprite.Sprite):
 			direction = self.rect.left-self.max_speed_x-10
 			bullet_dir = -1
 		shot = Bullet(players,bullet_dir,(direction,self.rect.top+self.rect.height/2),dmg,speed)
-		bullets.add(shot)
+		return shot
 		
 	def throw(self,players):
 		if self.xdirection>0:#facing right
@@ -280,9 +299,9 @@ class Player(pygame.sprite.Sprite):
 		abs(self.x_vel)+GRENADE_VELOCITY,GRENADE_VELOCITY)
 		self.grenade = item
 		item.player = self
-		grenades.add(item)
 		if DEBUG:
 			print item.rect.midbottom
+		return item
 
 pointFont = pygame.font.SysFont('ocraextended',24)
 class Point(pygame.sprite.Sprite):
