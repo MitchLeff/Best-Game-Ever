@@ -24,11 +24,6 @@ while running:
 			if event.key == K_ESCAPE:
 				running = False
 	print c1.getState()
-	#print c1.getState()
-#	for b in range(j1.get_numbuttons()):
-#		state.append(j1.get_button(b))
-#	print state
-#	for i in range(j1.get_numaxes()):
-#		print i, int(round(j1.get_axis(i),1))
-#	print ''
+	print ''
+	print c1.getState()
 	time.sleep(1)	
