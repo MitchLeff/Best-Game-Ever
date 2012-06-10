@@ -19,6 +19,7 @@ from Projectiles import *
 from Sprites import *
 from Controller import *
 from Helpers import *
+from Camera import *
 
 
 highscore = 0
@@ -33,7 +34,7 @@ highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 #START MUSICS
 pygame.mixer.music.load("sounds/Five Armies.mp3")
 pygame.mixer.music.play(-1)#infinite loop
-pygame.mixer.music.set_volume(0)
+pygame.mixer.music.set_volume(.5)
 
 pygame.joystick.init()
 
@@ -49,7 +50,10 @@ controllers.append(Keyboard(K_n, K_j, K_b, K_h, K_g, K_k, K_y, K_o, K_LSHIFT, K_
 #Make a player for each controller
 players = pygame.sprite.Group()
 for i in enumerate(controllers):
-	players.add(Player(PLAYER_SPRITE_OPTIONS[i[0]%4], i[1]))
+	players.add(Player(PLAYER_SPRITE_OPTIONS[i[0]%4], i[1], i[0]))
+
+#Create camera
+camera = Camera(players.sprites()[0], size, background_image.get_size())
 
 #MAIN GAME LOOP
 while running:
@@ -103,14 +107,17 @@ while running:
 	
 	for player in players.sprites():
 		actions = player.update(players.sprites(), platforms.sprites())
-		if actions['Bullet']:
-			bullets.add(actions['Bullet'])
-		if actions['Grenade']:
-			grenades.add(actions['Grenade'])
+		if isinstance(actions, int):
+			players.add(Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions))
+		elif isinstance(actions, dict):
+			if actions['Bullet']:
+				bullets.add(actions['Bullet'])
+			if actions['Grenade']:
+				grenades.add(actions['Grenade'])
 		
 	platforms.update()
 
-	screen.blit(background_image, (0,0))
+	screen.blit(background_image, camera.pos)
 	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, p.rect)
@@ -128,6 +135,9 @@ while running:
 	for g in grenades:
 		g.update(platforms,players)
 		screen.blit(g.image, g.rect)
+
+	#Update Camera
+	camera.update()
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))

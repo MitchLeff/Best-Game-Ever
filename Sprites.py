@@ -63,10 +63,11 @@ class Bill(pygame.sprite.Sprite):
 			self.kill()
 
 class Player(pygame.sprite.Sprite):
-	def __init__(self, spritesheet, controller):
+	def __init__(self, spritesheet, controller, number):
 		pygame.sprite.Sprite.__init__(self)
 		
 		self.controller = controller
+		self.player_number = number
 		
 		self.sprite_options = spritesheet
 		self.image = self.sprite_options[0]
@@ -122,6 +123,7 @@ class Player(pygame.sprite.Sprite):
 			sfx.play(die_sound)
 			self.kill()
 			self.dead = True
+			return self.player_number
 		
 		#Get direction being pressed and update accordingly
 		self.x_acceleration = state['L_R']*self.acceleration
@@ -217,15 +219,15 @@ class Player(pygame.sprite.Sprite):
 		
 	def collisioncheck(self, platforms):
 		self.collided = False
-		if self.rect.bottom >= height:
-			self.rect.bottom = height
+		if self.rect.bottom >= levelHeight:
+			self.rect.bottom = levelHeight
 			self.resetJumps()
 		if self.rect.left < 0:
 			self.rect.left = 0
 			self.x_vel = 0
 			self.x_acceleration = 0
-		elif self.rect.right >= width:
-			self.rect.right = width
+		elif self.rect.right >= levelWidth:
+			self.rect.right = levelWidth
 			self.x_vel = 0
 			self.x_acceleration = 0
 			
