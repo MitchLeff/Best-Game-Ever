@@ -16,9 +16,10 @@ from Constants import *
 from ObjectLists import *
 from Platforms import *
 from Projectiles import *
+from HUD import *
 
 class Player(pygame.sprite.Sprite):
-	def __init__(self):
+	def __init__(self,playerNum):
 		pygame.sprite.Sprite.__init__(self)
 		
 		self.sprite_options = PLAYER_SPRITE_OPTIONS
@@ -27,7 +28,9 @@ class Player(pygame.sprite.Sprite):
 		self.rightImage = self.image
 		self.leftImage = pygame.transform.flip(self.image, True, False)
 		self.rect = self.image.get_rect()
-		self.rect.midbottom = [width/2, height]
+		self.rect.midbottom = [width/2, height-HUDSIZE]
+		
+		self.playerNum = playerNum
 		
 		self.max_speed_x = MAX_SPEED_X
 		self.max_speed_y = MAX_SPEED_Y
@@ -59,6 +62,8 @@ class Player(pygame.sprite.Sprite):
 		self.health=100.0
 		self.combo = 0
 		
+		self.healthBar = healthBar(self)
+		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
 		#Determine x direction and acceleration 
@@ -66,6 +71,8 @@ class Player(pygame.sprite.Sprite):
 		if self.health <= 0:
 			sfx.play(die_sound)
 			self.kill()
+			
+		self.healthBar.update()
 			
 			
 		self.xspeed=xspeed
@@ -143,8 +150,8 @@ class Player(pygame.sprite.Sprite):
 		
 	def collisioncheck(self):
 		self.collided = False
-		if self.rect.bottom >= height:
-			self.rect.bottom = height
+		if self.rect.bottom >= height-HUDSIZE:
+			self.rect.bottom = height-HUDSIZE
 			self.jump_frames = 0
 			self.jumped = False
 			self.combo = 0
@@ -255,10 +262,10 @@ pygame.joystick.init()
 joysticks = []
 xspeed = []
 jumping = []
-players1 = pygame.sprite.Group(Player())
-players2 = pygame.sprite.Group(Player())
-players3 = pygame.sprite.Group(Player())
-players4 = pygame.sprite.Group(Player())
+players1 = pygame.sprite.Group(Player(1))
+players2 = pygame.sprite.Group(Player(2))
+players3 = pygame.sprite.Group(Player(3))
+players4 = pygame.sprite.Group(Player(4))
 totalplayers = [players1,players2,players3,players4]
 players = []
 
@@ -443,7 +450,9 @@ while running:
 		i = controller[0]
 		if abs(xspeed[i]) <= xtolerance:#prevents micro-movements
 			xspeed[i]=0
-
+	
+	HUD.fill((0,0,0))
+	
 	for player in enumerate(players):
 		i=player[0]
 		player[1].update(xspeed[i],jumping[i])
@@ -452,11 +461,11 @@ while running:
 
 	screen.blit(background_image, (0,0))
 	#Draw players
-	for player in players:
+	for player in enumerate(players):
 		#Check for respawn
-		if len(player) == 0:
-			player.add(Player())
-		for m in player:
+		if len(player[1]) == 0:
+			player[1].add(Player(player[0]+1))
+		for m in player[1]:
 			screen.blit(m.image, m.rect)
 
 	#Draw Plaforms
@@ -506,8 +515,6 @@ while running:
 	#One melee and one range ability
 	#Different classes
 	#Camera scrolling
-	#Damage and health system
-	#HUD
 	
 #OPTIMIZATIONS:
 	

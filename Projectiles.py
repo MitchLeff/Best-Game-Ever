@@ -65,8 +65,8 @@ class bullet(pygame.sprite.Sprite):
 		
 	def collisioncheck(self,platforms,players):
 		self.collided = False
-		if self.rect.bottom >= height:
-			self.rect.bottom = height
+		if self.rect.bottom >= height-HUDSIZE:
+			self.rect.bottom = height-HUDSIZE
 			self.collided = True
 		if self.rect.left < 0:
 			self.rect.left = 0
@@ -255,8 +255,8 @@ class grenade(pygame.sprite.Sprite):
 		
 	def collisioncheck(self,platforms,players):
 		self.collided = False
-		if self.rect.bottom >= height:
-			self.rect.bottom = height-1
+		if self.rect.bottom >= height-HUDSIZE:
+			self.rect.bottom = height-HUDSIZE-1
 			self.bounce("vert")
 			self.collided = True
 			
@@ -346,4 +346,4 @@ class grenade(pygame.sprite.Sprite):
 								print m.health
 							self.collided = True
 							hurt.play()
-							return self.collided
+		return self.collided
