@@ -247,9 +247,9 @@ scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
-pygame.mixer.music.load("sounds/Five Armies.mp3")
+pygame.mixer.music.load("sounds/Dungeon.ogg")
 pygame.mixer.music.play(-1)#infinite loop
-pygame.mixer.music.set_volume(0)
+pygame.mixer.music.set_volume(1.0)
 
 pygame.joystick.init()
 joysticks = []
