@@ -531,5 +531,6 @@ while running:
 		#Explosion Sound - PD, Media College
 		
 	#Images
+		#Explosion Sprites - CodeH4x0r - http://s296.photobucket.com/albums/mm182/CodeH4x0r/?action=view&current=explosion17.png
 
 	#Code
