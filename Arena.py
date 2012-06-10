@@ -534,3 +534,4 @@ while running:
 		#Explosion Sprites - CodeH4x0r - http://s296.photobucket.com/albums/mm182/CodeH4x0r/?action=view&current=explosion17.png
 
 	#Code
+		#sprite_sheet_loader based on work from hammythepig - http://stackoverflow.com/questions/10560446/how-do-you-select-a-sprite-image-from-a-sprite-sheet-in-python
