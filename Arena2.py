@@ -1,159 +1,27 @@
 #!/usr/bin/python
 #
-#Multiplayer Test Arena by Mitch Leff and Peter Kennedy
+#Shooting Test Arena by Peter Kennedy
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '1.9'
-
-#CONSTANTS
-FPS = 60
-GRAVITY = .8
-MIN_SPEED = 2
-MAX_SPEED = 4
-DEATH_TIMER = 40
-FLOATING_TEXT_LIFESPAN = 70
-MAX_SPEED_X = 8
-MAX_SPEED_Y = 15
-DEBUG = True
+#Version = '2.0'
 
 #IMPORTS
-import pygame, random, sys, glob, pickle
+import pygame, random, sys, glob, pickle, sprite_sheet_loader
 from pygame.locals import *
 from glob import glob#glob allows use of wildcard for reading filenames
 
-clock = pygame.time.Clock()
-pygame.init()
-pygame.font.init()
-pygame.mixer.init()
-pygame.display.set_mode()
-pygame.mouse.set_visible(True)
-pygame.display.set_caption("Multiplayer Arena Test")
-
-#LOAD SOUNDS
-sfx = pygame.mixer.Channel(0)
-announcer = pygame.mixer.Channel(1)
-
-die_sound = pygame.mixer.Sound("sounds/die.wav")
-jump_sound = pygame.mixer.Sound("sounds/jump.wav")
-stomp_sound = pygame.mixer.Sound("sounds/stomp.wav")
-
-combo0 = pygame.mixer.Sound("sounds/killingspree.wav")
-combo1 = pygame.mixer.Sound("sounds/rampage.wav")
-combo2 = pygame.mixer.Sound("sounds/unstoppable.wav")
-combo3 = pygame.mixer.Sound("sounds/godlike.wav")
-combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
-
-#LOAD IMAGES
-background_image = (pygame.image.load("images/coachBig.png").convert_alpha())
-
-mario_still = (pygame.image.load("images/mario_still.png").convert_alpha())
-mario_jump = (pygame.image.load("images/mario_jump.png").convert_alpha())
-mario_walk1 = (pygame.image.load("images/mario_walk1.png").convert_alpha())
-mario_walk2 = (pygame.image.load("images/mario_walk2.png").convert_alpha())
-mario_walk3 = (pygame.image.load("images/mario_walk3.png").convert_alpha())
-
-MARIO_SPRITE_OPTIONS = [mario_still, mario_jump, mario_walk1, mario_walk2, mario_walk3, mario_walk2]
-
-bill_image = pygame.image.load("images/bill.png").convert_alpha()
-platform_img = pygame.image.load("images/platform.png").convert_alpha()
-
-width  = max(200,background_image.get_width())
-height = max(300,background_image.get_height())
-size   = [width, height]
-screen = pygame.display.set_mode(size)
-background = pygame.Surface(screen.get_size())
-
-def br(lines=1):
-	for i in range(0,lines):
-		print ""
-	
-def volumeChange(change):
-	currentVol = pygame.mixer.music.get_volume()
-	currentVol += change
-	if currentVol > 1.0:
-		currentVol = 1.0
-	elif currentVol < 0.0:
-		currentVol = 0.0
-	pygame.mixer.music.set_volume(currentVol)
-	
-def saveLevel(currentmap, mapname):
-	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
-	pickle.dump(currentmap, map)#(object to save, file to save to)
-	map.close()
-	print "Map saved as:",mapname+".map"
-	br()
-
-def loadLevel(mapname):
-	try: 
-		file = open(mapname,'r')
-	except:
-		print "No such map: "+mapname
-		return
-	unpickledmap = pickle.load(file)#load(filename) recreates pickled object
-	file.close()
-	print "Level '%s"%mapname+"' loaded successfully!"
-	br()
-	return unpickledmap
-	
-def chooseLevel():
-	options = glob("maps/*.map")#Uses wildcard to make list of all files
-	print "Your level options are:"
-	for choice in enumerate(options):
-		print str(choice[0]+1)+")", choice[1]
-	br()
-	try:
-		choice = input("Which level do you want? ")
-	except (NameError,TypeError,SyntaxError):
-		print "Invalid choice."
-		return chooseLevel()
-	return loadLevel(options[choice-1])
-	br()
-
-class bill(pygame.sprite.Sprite):
-	def __init__(self, *groups):
-		global fireleft,fireright
-		directions = [-1, 1]
-		pygame.sprite.Sprite.__init__(self)
-		
-		self.image = bill_image
-		self.rect = self.image.get_rect()
-		
-		if fireleft:
-			self.direction = 1
-		elif fireright:
-			self.direction = -1
-		self.y_dir = 0
-		self.y_vel = 0
-		
-		h = random.randint(height/6 , height-self.image.get_height()/2)
-		
-		if self.direction == 1:
-			self.rect.midright = [0, h]
-		elif self.direction == -1:
-			self.rect.midleft = [width, h]
-			self.image = pygame.transform.flip(self.image, True, False)
-		self.speed = random.randint(MIN_SPEED,MAX_SPEED)
-		
-		for g in groups:
-			g.add(self)
-		
-		self.mode = "fire"
-	
-	def update(self):
-		if self.mode == 'fire':
-			self.rect.right += self.speed*self.direction
-		elif self.mode == 'die':
-			self.y_vel += GRAVITY
-			self.rect.top += self.y_vel
-		if self.rect.right < -10 or self.rect.left > width+10 or self.rect.top > height + 10:
-			self.kill()
+from sprite_sheet_loader import *
+from Constants import *
+from ObjectLists import *
+from Platforms import *
+from Projectiles import *
 
 class mario(pygame.sprite.Sprite):
-	def __init__(self):
+	def __init__(self, Controller):
 		pygame.sprite.Sprite.__init__(self)
 		
-		self.sprite_options = MARIO_SPRITE_OPTIONS
+		self.sprite_options = PLAYER_SPRITE_OPTIONS
 		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = [width/2, height]
@@ -185,12 +53,18 @@ class mario(pygame.sprite.Sprite):
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
+		self.health=100.0
 		self.combo = 0
 		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
 		#Determine x direction and acceleration 
 		#Joystack compatible
+		if self.health <= 0:
+			sfx.play(die_sound)
+			self.kill()
+			
+			
 		self.xspeed=xspeed
 		if self.xspeed!=0:
 			self.xdirection = self.xspeed
@@ -277,10 +151,13 @@ class mario(pygame.sprite.Sprite):
 			self.rect.right = width
 			self.x_vel = 0
 			self.x_accell = 0
+			
+		#PLATFORM COLLISIONS
 		for p in platforms:
-			if abs(p.rect.x-m.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-m.rect.y)<= self.collisionCheckDist+p.rect.height:
-				if pygame.sprite.collide_mask(p, m):
+			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
+				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
+							
 							#Top collision
 							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
 							self.rect.bottom >= p.rect.top:
@@ -291,6 +168,7 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.bottom = p.rect.top
 								self.collided = True
+							
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 							self.rect.top <= p.rect.bottom:
@@ -301,8 +179,10 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.top = p.rect.bottom
 								self.collided = True
+						
 						if self.rect.bottom >= p.rect.top+stair_tolerance and\
 						self.rect.top <= p.rect.bottom:
+							
 							#Right Collision
 							if self.rect.left <= p.rect.right and\
 							self.rect.left >= p.rect.right-10:
@@ -313,6 +193,7 @@ class mario(pygame.sprite.Sprite):
 								self.jump_frames = 0
 								self.rect.left = p.rect.right+1
 								self.collided = True
+							
 							#Left Collision
 							elif self.rect.right >= p.rect.left and\
 							self.rect.right <= p.rect.left+10:
@@ -324,37 +205,36 @@ class mario(pygame.sprite.Sprite):
 								self.rect.right = p.rect.left-1
 								self.collided = True
 		return self.collided
-			
-pointFont = pygame.font.SysFont('ocraextended',24)
-class point(pygame.sprite.Sprite):
-	def __init__(self, n, pos):
-		pygame.sprite.Sprite.__init__(self)
-		self.life = FLOATING_TEXT_LIFESPAN
-		self.pos = pos
-		self.n = n
-		self.text = pointFont.render("+%s" % self.n, True, (0,255,0))
-	
-	def update(self):
-		self.life -= 1
-		if self.life <= 0:
-			self.kill()
-			
-class platform(pygame.sprite.Sprite):
-	def __init__(self,pos):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = platform_img
-		self.rect = self.image.get_rect()
-		self.rect.midbottom = pos	
-
-points = pygame.sprite.Group()
-bills = pygame.sprite.Group()
-platforms = pygame.sprite.Group()
+		
+	def shoot(self,players,dmg,speed):
+		if self.xdirection>0:#facing right
+			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit mario while running
+			bullet_dir = 1
+		elif self.xdirection<0:#facing left
+			direction = self.rect.left-self.max_speed_x-10
+			bullet_dir = -1
+		shot = bullet(players,bullet_dir,(direction,self.rect.top+self.rect.height/2),dmg,speed)
+		bullets.add(shot)
+		
+	def throw(self,players):
+		if self.xdirection>0:#facing right
+			direction = self.rect.right
+			grenade_dir = 1
+		elif self.xdirection<0:
+			direction = self.rect.left
+			grenade_dir = -1
+		item = grenade(players,grenade_dir,(direction,self.rect.top+self.rect.height/2),\
+		abs(self.x_vel)+GRENADE_VELOCITY,GRENADE_VELOCITY)
+		self.grenade = item
+		item.player = self
+		grenades.add(item)
+		if DEBUG:
+			print item.rect.midbottom
 
 highscore = 0
 score = 0
 running = True
 cycles = 0
-death_timer = 0
 
 scoreFont = pygame.font.SysFont('ocraextended', 26)
 scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
@@ -363,8 +243,8 @@ highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 #START MUSICS
 pygame.mixer.music.load("sounds/Five Armies.mp3")
 pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.set_volume(0)
 
-#Load Joysticks
 pygame.joystick.init()
 joysticks = []
 xspeed = []
@@ -375,50 +255,48 @@ marios3 = pygame.sprite.Group(mario())
 marios4 = pygame.sprite.Group(mario())
 totalplayers = [marios1,marios2,marios3,marios4]
 players = []
+
 for i in range(0,pygame.joystick.get_count()):
 	joysticks.append(pygame.joystick.Joystick(i))
 	joysticks[i].init()
 	xspeed.append(0)
 	jumping.append(False)
 	players.append(totalplayers[i])
-	
-#Add a keyboard player
+
+#Add keyboard players
 if len(players) < 4:
 	keyboard_player1 = len(players)
-	players.append(totalplayers[keyboard_player1])
+	players.append(totalplayers[keyboard_player1]) #If no players, add one player
 	xspeed.append(0)
 	jumping.append(False)
-	
-xtolerance=0.05
-stair_tolerance = 8 #how many pixels a sprite can run up (like stairs _--__--)
-#assign controls to marios1
 
-firebuttonleft = 4
-firebuttonright = 5
-fireleft = False
-fireright = False
-jumpbutton = 0
-quitbutton = 6#6 is back button
+if len(players) < 4:
+	keyboard_player2 = len(players)
+	players.append(totalplayers[keyboard_player2]) #add a second keyboard player
+	xspeed.append(0)
+	jumping.append(False)
 
+#MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
 
 	pressed = pygame.key.get_pressed()
+
 	
-		
 	DOWN = pressed[274]
 	RIGHT = pressed[275]
 	LEFT = pressed[276]
 	Yax = 1
 	Xax = 0
-	
+
 	for event in pygame.event.get():
+	
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
-			
+		
 			if event.key == K_ESCAPE:
 				running = False
-				
+			
 			#Toggle debug mode
 			elif event.key == K_BACKQUOTE:
 				if DEBUG == False:
@@ -427,20 +305,20 @@ while running:
 				elif DEBUG == True:
 					DEBUG = False
 					print "Debug Mode Disabled."
-			
+		
 			#Adjust Music Volume	
 			elif event.key == K_PAGEUP:
 				volumeChange(0.2)
 			elif event.key == K_PAGEDOWN:
 				volumeChange(-0.2)
-			
+				
 			#SAVE PLATFORMS
 			elif event.key == K_1:
 				saved_platforms = []
 				for p in platforms:
 					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
 				saveLevel(saved_platforms,raw_input("What level name to save as? "))
-				
+		
 			#LOAD PLATFORMS
 			elif event.key == K_2:
 				del platforms
@@ -449,52 +327,107 @@ while running:
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
-					
+		
 			#Keyboard Player 1
 			elif event.key == K_w:
 				jumping[keyboard_player1] = True
-			
+		
 			elif event.key == K_a:
 				xspeed[keyboard_player1] = -1
-				
+			
 			elif event.key == K_d:
-				xspeed[keyboard_player1] = 1			
+				xspeed[keyboard_player1] = 1
+		
+			elif event.key == K_SPACE:
+				for m in players[keyboard_player1]:
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(BULLET_SPEED))
+				guns.play(shoot)
+			
+			elif event.key == K_LSHIFT:
+				for m in players[keyboard_player1]:
+					m.throw(players)
+		
+			#Keyboard Player 2
+			elif event.key == K_UP:
+				jumping[keyboard_player2] = True
+		
+			elif event.key == K_LEFT:
+				xspeed[keyboard_player2] = -1
+			
+			elif event.key == K_RIGHT:
+				xspeed[keyboard_player2] = 1
+		
+			elif event.key == K_SLASH:
+				for m in players[keyboard_player2]:
+					m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+				guns.play(shoot)
+			
+			elif event.key == K_PERIOD:
+				for m in players[keyboard_player2]:
+					m.throw(players)
 			
 		elif event.type == KEYUP:
-			
+		
 			#Keyboard Player 1
 			if event.key == K_a or event.key == K_d:
 				xspeed[keyboard_player1]=0		
-			elif event.key == K_w:
+			if event.key == K_w:
 				jumping[keyboard_player1] = False
-
+			if event.key == K_LSHIFT:
+				for m in players[keyboard_player1]:
+					try:
+						m.grenade.cooking = False
+					except:
+						break
+		
+			#Keyboard Player 2
+			if event.key == K_LEFT or event.key == K_RIGHT:
+				xspeed[keyboard_player2]=0
+			if event.key == K_UP:
+				jumping[keyboard_player2]=False
+			if event.key == K_PERIOD:
+				for m in players[keyboard_player2]:
+					try:
+						m.grenade.cooking = False
+					except:
+						break
+			
+			
+		#QUIT
 		if event.type == QUIT:
 			pygame.quit()
 			sys.exit()
-		
-		
+	
+		#JOYSTICK CONTROLS
 		elif event.type == JOYBUTTONDOWN:
 			for controller in enumerate(joysticks):
 				i = controller[0]
 				jumping[i] = controller[1].get_button(jumpbutton)
-				
+				if event.button == firebuttonright:#***#finish converting controls
+					for m in players[i]:
+						m.shoot(players,BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+					guns.play(shoot)
+				elif event.button == firebuttonleft:
+					for m in players[i]:
+						m.throw(players)
+			
 			if event.button == quitbutton:
 				pygame.quit()
 				sys.exit()
-			elif event.button == firebuttonleft:
-				fireleft = True
-				bills.add(bill())
-				fireleft = False
-			elif event.button == firebuttonright:
-				fireright = True
-				bills.add(bill())
-				fireright = False
-				
+			
 		elif event.type == JOYBUTTONUP:
 			for controller in enumerate(joysticks):
 				i = controller[0]
 				jumping[i] = controller[1].get_button(jumpbutton)
+				for m in players[i]:
+					if event.button == firebuttonleft:
+						m.throw(players)
 					
+		elif event.type == JOYAXISMOTION:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				xspeed[i] = controller[1].get_axis(0)
+				
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = platform(event.pos)
 			platforms.add(newp)
@@ -502,107 +435,88 @@ while running:
 
 	for controller in enumerate(joysticks):
 		i = controller[0]
-		xspeed[i] = controller[1].get_axis(Xax)#prints unnecessary debug info
-		if abs(xspeed[i]) <= xtolerance:#if x is too close to zero
+		if abs(xspeed[i]) <= xtolerance:#prevents micro-movements
 			xspeed[i]=0
-	#End new joystick code (1.1)
-	
+
 	for player in enumerate(players):
 		i=player[0]
 		player[1].update(xspeed[i],jumping[i])
-		
-	bills.update()
+	
 	platforms.update()
-	
+
 	screen.blit(background_image, (0,0))
-	
-	#Draw marios
+	#Draw Marios
 	for player in players:
+		#Check for respawn
+		if len(player) == 0:
+			player.add(mario())
 		for m in player:
 			screen.blit(m.image, m.rect)
-	
-	#Bill collision detection
-	for b in bills.sprites():
-		screen.blit(b.image, b.rect)
-		
-		for player in players:
-			for m in player:
-				if pygame.sprite.collide_mask(b, m) and b.mode == 'fire':
-					#Bill Stomp
-					if m.rect.bottom < b.rect.top + m.y_vel + m.rect.height/2:
-						sfx.play(stomp_sound)
-						b.mode = 'die'
-						b.y_vel = -8
-						b.image = pygame.transform.flip(b.image,False, True)
-						m.jump_frames = 1
-						m.combo += 1
-						score += m.combo
-						if score > highscore:
-							highscore = score
-							highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
-						m.y_vel = -6
-						points.add(point(m.combo, b.rect.center))
-						#Announcer Combo Sounds
-						if m.combo == 3:
-							announcer.play(combo0)
-						elif m.combo == 6:
-							announcer.play(combo1)
-						elif m.combo == 9:
-							announcer.play(combo2)
-						elif m.combo == 12:
-							announcer.play(combo3)
-						elif m.combo >= 15:
-							announcer.play(combo4)
-					else:
-						m.kill()
-						sfx.play(die_sound)
-						death_timer = DEATH_TIMER
 
-		#Platform collision detection
+	#Draw Plaforms
 	for p in platforms.sprites():
 		screen.blit(p.image,p.rect)
+	
+	#Draw and Update Bullets
+	for b in bullets:
+		b.update(platforms,players)
+		screen.blit(b.image, b.rect)
+
+	#Update and Draw Grenades
+	for g in grenades:
+		g.update(platforms,players)
+		screen.blit(g.image, g.rect)
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
 	pygame.display.update()
-	
+
 	cycles += 1
-	if death_timer > 0:
-		death_timer -= 1
-		if death_timer <= 0:
-			marios1.add(mario())
-			marios2.add(mario())
-			score = 0
-			scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 
-#Version History:
+#Version History
 
-	#1.1 - Added controller movement for one player --> detecting controller axis position causes noticeable lag in game. How to optimize?
+	#1.0 - Bullets
+	
+	#1.1 - Damage and Health
+	
+	#1.2 - Bullets face proper direction and have sound
 
-	#1.2 - Added controller movement and jumping for two players
+	#1.3 - Added grenades
 	
-	#1.3 - Added platforms and collision detection for them (very buggy atm)
+	#1.4 - Grenades bounce (but not enough)
 	
-	#1.4 - Softcoded number of players and joysticks
+	#1.5 - Grenades have friction
 	
-	#1.5 - Better collision detection plus left and right collision detection.
+	#1.6 - Grenade and player collisions fixed
 	
-	#1.6 - Optimized loop movement
-	
-	#1.7 - Added level saver/loader
-	
-	#1.8 - Fixed jumping issue
-	
-	#1.9 - Fixed ducking and stair issue
+	#2.0 - Marios respawn properly, fixed multiple bullet damage bug, bullet no longer hits the shooter automatically, grenades explode and do damage, fixed bullet collision bug, grenade speed influenced by movement speed, fixed grenades right and left collisions, fixed mario infinite jumping bug, grenade cooking enabled
 
-#Bugs:
+#BUGS:
 
-	#Up to quad-jumping possible with proper timing
-	#Sprite direction defaults to right-facing always
-	#Mario can jump-duck through platforms (best demonstrated on "Maze.map")
-	
+	#*1* keyboard movement a little unresponsive (left-right war)
+
 #TO ADD:
 
 	#One melee and one range ability
 	#Different classes
 	#Camera scrolling
+	#Damage and health system
+	#HUD
+	
+#OPTIMIZATIONS:
+	
+	#Make grenades not bounce up and down when velocity is 0
+	#Make grenade explosions only do damage once, but at any point in time
+	
+#Attributions:
+	
+	#Sounds
+		#Laser Sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/ 
+			#- THE_bizniss CC Sample+ 1.0
+		#Hurt Sound - http://www.freesound.org/people/thecheeseman/sounds/44429/ 
+			#- thecheeseman CC Attribution 3.0
+		#Explosion Sound - PD, Media College
+		
+	#Images
+
+	#Code

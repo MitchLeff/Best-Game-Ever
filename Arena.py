@@ -10,8 +10,7 @@
 
 #CONSTANTS
 from Constants import *
-from Sprites import *
-from Helpers import *
+import Controller, Sprites, Helpers
 
 #IMPORTS
 import pygame, random, sys, glob, pickle

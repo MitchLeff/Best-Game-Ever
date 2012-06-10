@@ -12,6 +12,15 @@ def br(lines=1):
 	for i in range(0,lines):
 		print ""
 	
+def volumeChange(change):
+	currentVol = pygame.mixer.music.get_volume()
+	currentVol += change
+	if currentVol > 1.0:
+		currentVol = 1.0
+	elif currentVol < 0.0:
+		currentVol = 0.0
+	pygame.mixer.music.set_volume(currentVol)
+
 def saveLevel(currentmap, mapname):
 	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
 	pickle.dump(currentmap, map)#(object to save, file to save to)

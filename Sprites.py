@@ -4,7 +4,7 @@ import pygame, random, sys, glob, pickle
 
 init()
 
-class bill(pygame.sprite.Sprite):
+class Bill(pygame.sprite.Sprite):
 	def __init__(self, *groups):
 		directions = [-1, 1]
 		pygame.sprite.Sprite.__init__(self)
@@ -60,11 +60,12 @@ class bill(pygame.sprite.Sprite):
 		if self.rect.right < -10 or self.rect.left > width+10 or self.rect.top > height + 10:
 			self.kill()
 
-class mario(pygame.sprite.Sprite):
-	def __init__(self):
+class Player(pygame.sprite.Sprite):
+	def __init__(self, Spritesheet, Controller):
 		pygame.sprite.Sprite.__init__(self)
 
-		self.sprite_options = MARIO_SPRITE_OPTIONS
+		self.controller = Controller
+		self.sprite_options = Spritesheet
 		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = [width/2, height]
@@ -176,7 +177,7 @@ class mario(pygame.sprite.Sprite):
 			self.image = pygame.transform.flip(self.image, True, False)
 
 pointFont = pygame.font.SysFont('ocraextended',24)
-class point(pygame.sprite.Sprite):
+class Point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):
 		pygame.sprite.Sprite.__init__(self)
 		self.life = FLOATING_TEXT_LIFESPAN
@@ -189,7 +190,7 @@ class point(pygame.sprite.Sprite):
 		if self.life <= 0:
 			self.kill()
 			
-class platform(pygame.sprite.Sprite):
+class Platform(pygame.sprite.Sprite):
 	def __init__(self,pos):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = platform_img
