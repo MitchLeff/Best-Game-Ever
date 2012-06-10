@@ -886,7 +886,6 @@ while running:
 				jumping[keyboard_player2]=False
 			if event.key == K_PERIOD:
 				for m in players[keyboard_player2]:
-					m.grenade.cooking = False
 					try:
 						m.grenade.cooking = False
 					except:
@@ -903,26 +902,30 @@ while running:
 			for controller in enumerate(joysticks):
 				i = controller[0]
 				jumping[i] = controller[1].get_button(jumpbutton)
+				if event.button == firebuttonright:#***#finish converting controls
+					for m in players[i]:
+						m.shoot(BULLET_DAMAGE,m.xdirection*(5+abs(m.x_vel)+m.max_speed_x))
+					guns.play(shoot)
+				elif event.button == firebuttonleft:
+					for m in players[i]:
+						m.throw()
 				
 			if event.button == quitbutton:
 				pygame.quit()
 				sys.exit()
 				
-			###UPDATE joystick controls
-			elif event.button == firebuttonleft:
-				for m in marios1:
-					m.shoot(5,-5)
-				guns.play(shoot)
-			elif event.button == firebuttonright:
-				for m in marios1:
-					m.shoot(5,5)
-				guns.play(shoot)
-			###
-				
 		elif event.type == JOYBUTTONUP:
 			for controller in enumerate(joysticks):
 				i = controller[0]
 				jumping[i] = controller[1].get_button(jumpbutton)
+				for m in players[i]:
+					if event.button == firebuttonleft:
+						m.throw()
+						
+		elif event.type == JOYAXISMOTION:
+			for controller in enumerate(joysticks):
+				i = controller[0]
+				xspeed[i] = controller[1].get_axis(0)
 					
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = platform(event.pos)

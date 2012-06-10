@@ -17,15 +17,12 @@ from ObjectLists import *
 from Platforms import *
 from Projectiles import *
 
-class Player(pygame.sprite.Sprite):
-	def __init__(self):
+class mario(pygame.sprite.Sprite):
+	def __init__(self, Controller):
 		pygame.sprite.Sprite.__init__(self)
 		
 		self.sprite_options = PLAYER_SPRITE_OPTIONS
-		self.imgNum = random.randint(0,3)
-		self.image = self.sprite_options[self.imgNum]
-		self.rightImage = self.image
-		self.leftImage = pygame.transform.flip(self.image, True, False)
+		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = [width/2, height]
 		
@@ -126,20 +123,18 @@ class Player(pygame.sprite.Sprite):
 				if self.collisioncheck():
 					break
 		#Set Image
-		"""if self.jump_frames != 0: #Jump image if jumped
+		if self.jump_frames != 0: #Jump image if jumped
 			self.image = self.sprite_options[1]
-			self.step = 0"""
-		if self.x_vel == 0:
-			self.image = self.sprite_options[self.imgNum]
 			self.step = 0
-		"""else:
+		elif self.x_vel == 0:
+			self.image = self.sprite_options[0]
+			self.step = 0
+		else:
 			self.image = self.moving_sprites[int(self.step) % len(self.moving_sprites)]
-			self.step += 1.0/self.image_tempo"""
+			self.step += 1.0/self.image_tempo
 		#Check to flip for going left
 		if self.xdirection == -1:
-			self.image = self.leftImage
-		else:
-			self.image = self.rightImage
+			self.image = pygame.transform.flip(self.image, True, False)
 		
 	def collisioncheck(self):
 		self.collided = False
@@ -159,8 +154,7 @@ class Player(pygame.sprite.Sprite):
 			
 		#PLATFORM COLLISIONS
 		for p in platforms:
-			if abs(p.rect.left-self.rect.x) <= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
-			#if pygame.sprite.collide_rect(p, self):
+			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
 				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							
@@ -214,7 +208,7 @@ class Player(pygame.sprite.Sprite):
 		
 	def shoot(self,players,dmg,speed):
 		if self.xdirection>0:#facing right
-			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit player while running
+			direction = self.rect.right+self.max_speed_x+10#ensure bullet doesn't hit mario while running
 			bullet_dir = 1
 		elif self.xdirection<0:#facing left
 			direction = self.rect.left-self.max_speed_x-10
@@ -255,11 +249,11 @@ pygame.joystick.init()
 joysticks = []
 xspeed = []
 jumping = []
-players1 = pygame.sprite.Group(Player())
-players2 = pygame.sprite.Group(Player())
-players3 = pygame.sprite.Group(Player())
-players4 = pygame.sprite.Group(Player())
-totalplayers = [players1,players2,players3,players4]
+marios1 = pygame.sprite.Group(mario())
+marios2 = pygame.sprite.Group(mario())
+marios3 = pygame.sprite.Group(mario())
+marios4 = pygame.sprite.Group(mario())
+totalplayers = [marios1,marios2,marios3,marios4]
 players = []
 
 for i in range(0,pygame.joystick.get_count()):
@@ -451,11 +445,11 @@ while running:
 	platforms.update()
 
 	screen.blit(background_image, (0,0))
-	#Draw players
+	#Draw Marios
 	for player in players:
 		#Check for respawn
 		if len(player) == 0:
-			player.add(Player())
+			player.add(mario())
 		for m in player:
 			screen.blit(m.image, m.rect)
 
@@ -495,7 +489,7 @@ while running:
 	
 	#1.6 - Grenade and player collisions fixed
 	
-	#2.0 - players respawn properly, fixed multiple bullet damage bug, bullet no longer hits the shooter automatically, grenades explode and do damage, fixed bullet collision bug, grenade speed influenced by movement speed, fixed grenades right and left collisions, fixed player infinite jumping bug, grenade cooking enabled
+	#2.0 - Marios respawn properly, fixed multiple bullet damage bug, bullet no longer hits the shooter automatically, grenades explode and do damage, fixed bullet collision bug, grenade speed influenced by movement speed, fixed grenades right and left collisions, fixed mario infinite jumping bug, grenade cooking enabled
 
 #BUGS:
 
