@@ -16,7 +16,7 @@ BULLET_SPEED = 10
 BULLET_DAMAGE = 10.0
 GRENADE_DAMAGE = 80.0
 GRENADE_VELOCITY = 10.0
-DEBUG = True
+DEBUG = False
 
 #Make Clock
 clock = pygame.time.Clock()
@@ -46,7 +46,13 @@ sniper = (pygame.image.load("images/sniper.png").convert_alpha())
 engineer = (pygame.image.load("images/engineer.png").convert_alpha())
 soldier = (pygame.image.load("images/soldier.png").convert_alpha())
 medic = (pygame.image.load("images/medic.png").convert_alpha())
-PLAYER_SPRITE_OPTIONS = [sniper,engineer,soldier,medic]
+
+SNIPER_SPRITE_LIST = [sniper]
+ENGINEER_SPRITE_LIST = [engineer]
+SOLDIER_SPRITE_LIST = [soldier]
+MEDIC_SPRITE_LIST = [medic]
+
+PLAYER_SPRITE_OPTIONS = [SNIPER_SPRITE_LIST, ENGINEER_SPRITE_LIST, SOLDIER_SPRITE_LIST, MEDIC_SPRITE_LIST]
 
 #WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())

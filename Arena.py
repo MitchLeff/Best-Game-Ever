@@ -10,7 +10,9 @@
 
 #CONSTANTS
 from Constants import *
-import Controller, Sprites, Helpers
+from Sprites import *
+from Helpers import *
+from Controller import *
 
 #IMPORTS
 import pygame, random, sys, glob, pickle
@@ -36,13 +38,12 @@ joysticks = []
 
 #ADD A PLAYER FOR EVERY JOYSTICK
 for i in range(0,pygame.joystick.get_count()):
-	joysticks.append(pygame.joystick.Joystick(i))
-	joysticks[i].init()
-	players.add(mario())
+	joysticks.append(Joystick(i))
+	players.add(Player())
 
 #Add a keyboard player
 if len(players.sprites()) < 4:
-	players.add(mario())
+	players.add(Player())
 	
 while running:
 	clock.tick(FPS)
@@ -192,8 +193,8 @@ while running:
 	if death_timer > 0:
 		death_timer -= 1
 		if death_timer <= 0:
-			marios.add(mario())
-			marios.add(mario())
+			marios.add(Player())
+			marios.add(Player())
 			score = 0
 			scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 

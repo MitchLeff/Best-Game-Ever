@@ -5,7 +5,7 @@ from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
 
-class bullet(pygame.sprite.Sprite):
+class Bullet(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,damage,xvel,sprite=BULLET_SPRITE_OPTIONS):
 	
 		#SPRITE
@@ -131,7 +131,7 @@ class bullet(pygame.sprite.Sprite):
 							hurt.play()
 							return self.collided
 		
-class grenade(pygame.sprite.Sprite):
+class Grenade(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):
 		pygame.sprite.Sprite.__init__(self)
 		self.sprite_options = GRENADE_SPRITE_OPTIONS
