@@ -245,7 +245,7 @@ class Player(pygame.sprite.Sprite):
 								self.y_vel = 0
 								self.rect.bottom = p.rect.top
 								self.collided = True
-								self.jumps_left = 2
+								self.resetJumps()
 							
 							#Bottom collision
 							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
@@ -253,7 +253,7 @@ class Player(pygame.sprite.Sprite):
 								if DEBUG:
 									print "Collide bottom"
 								self.y_vel = 0
-								self.jumps_left = 2
+								self.resetJumps()
 								self.jumped = False
 								self.rect.top = p.rect.bottom
 								self.collided = True
