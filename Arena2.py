@@ -116,8 +116,7 @@ while running:
 				grenades.add(actions['Grenade'])
 		
 	platforms.update()
-
-	screen.blit(background_image, camera.pos)
+ 
 	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, p.rect)
