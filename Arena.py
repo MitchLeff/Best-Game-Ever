@@ -1,231 +1,193 @@
-#Main arena file for running Arena Levels
-
 #!/usr/bin/python
 #
-#Multiplayer Test Arena by Mitch Leff and Peter Kennedy
+#Shooting Test Arena by Peter Kennedy
 #
 #License - All rights reserved, copyright Mitch Leff and Peter Kennedy
 #
-#Version = '1.9'
-
-#CONSTANTS
-from Constants import *
-from Sprites import *
-from Helpers import *
-from Controller import *
+#Version = '2.0'
 
 #IMPORTS
-import pygame, random, sys, glob, pickle
+import pygame, random, sys, glob, pickle, sprite_sheet_loader
 from pygame.locals import *
 from glob import glob#glob allows use of wildcard for reading filenames
 
-#Initialization of pygame modules
-init()
+from sprite_sheet_loader import *
+from Constants import *
+from ObjectLists import *
+from Platforms import *
+from Projectiles import *
+from Sprites import *
+from Controller import *
+from Helpers import *
+from Camera import *
+
+
+highscore = 0
+score = 0
+running = True
+cycles = 0
+
+scoreFont = pygame.font.SysFont('ocraextended', 26)
+scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
+highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
 pygame.mixer.music.load("sounds/Five Armies.mp3")
-#pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.play(-1)#infinite loop
+pygame.mixer.music.set_volume(.5)
 
-#MAKE SPRITE GROUPS
-players = pygame.sprite.Group()
-points = pygame.sprite.Group()
-bills = pygame.sprite.Group()
-platforms = pygame.sprite.Group()
-
-#Load Joysticks
 pygame.joystick.init()
-joysticks = []
 
-#ADD A PLAYER FOR EVERY JOYSTICK
-for i in range(0,pygame.joystick.get_count()):
-	joysticks.append(Joystick(i))
-	players.add(Player())
+#Get all active controllers
+controllers = []
+for i in range(pygame.joystick.get_count()):
+	temp_controller = Joystick(i)
+	controllers.append(temp_controller)
 
-#Add a keyboard player
-if len(players.sprites()) < 4:
-	players.add(Player())
-	
+#Add default Keyboard player
+controllers.append(Keyboard(K_n, K_j, K_b, K_h, K_g, K_k, K_y, K_o, K_LSHIFT, K_LCTRL, K_a, K_d, K_w, K_s))
+
+#Make a player for each controller
+players = pygame.sprite.Group()
+for i in enumerate(controllers):
+	players.add(Player(PLAYER_SPRITE_OPTIONS[i[0]%4], i[1], i[0]))
+
+#Create camera
+camera = Camera(players.sprites()[0], size, background_image.get_size())
+
+#MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
-
-	pressed = pygame.key.get_pressed()
-		
-	DOWN = pressed[274]
-	RIGHT = pressed[275]
-	LEFT = pressed[276]
-	Yax = 1
-	Xax = 0
-	
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
 			if event.key == K_ESCAPE:
 				running = False
+			
+			#Toggle debug mode
+			elif event.key == K_BACKQUOTE:
+				if DEBUG == False:
+					DEBUG = True
+					print "Debug Mode Enabled."
+				elif DEBUG == True:
+					DEBUG = False
+					print "Debug Mode Disabled."
+		
+			#Adjust Music Volume	
+			elif event.key == K_PAGEUP:
+				volumeChange(0.2)
+			elif event.key == K_PAGEDOWN:
+				volumeChange(-0.2)
+				
+			#SAVE PLATFORMS
 			elif event.key == K_1:
-			#Save all platform positions in map
 				saved_platforms = []
 				for p in platforms:
 					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
 				saveLevel(saved_platforms,raw_input("What level name to save as? "))
+		
+			#LOAD PLATFORMS
 			elif event.key == K_2:
-			#Load all platform positions in map
 				del platforms
 				platform_pos = chooseLevel()
 				platforms = pygame.sprite.Group()
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
-					
-			#Keyboard Player 1
-			elif event.key == K_w:
-				jumping[keyboard_player1] = True
-			
-			elif event.key == K_a:
-				xspeed[keyboard_player1] = -1
-				
-			elif event.key == K_d:
-				xspeed[keyboard_player1] = 1			
-			
-		elif event.type == KEYUP:
-			
-			#Keyboard Player 1
-			if event.key == K_a or event.key == K_d:
-				xspeed[keyboard_player1]=0		
-			elif event.key == K_w:
-				jumping[keyboard_player1] = False
-
-		if event.type == QUIT:
+		
+		#QUIT
+		elif event.type == QUIT:
 			pygame.quit()
 			sys.exit()
-			
-			
-		elif event.type == JOYBUTTONDOWN:
-			for controller in enumerate(joysticks):
-				i = controller[0]
-				jumping[i] = controller[1].get_button(jumpbutton)
-				
-			if event.button == quitbutton:
-				pygame.quit()
-				sys.exit()
-			elif event.button == firebuttonleft:
-				fireleft = True
-				bills.add(bill())
-				fireleft = False
-			elif event.button == firebuttonright:
-				fireright = True
-				bills.add(bill())
-				fireright = False
-				
-		elif event.type == JOYBUTTONUP:
-			for controller in enumerate(joysticks):
-				i = controller[0]
-				jumping[i] = controller[1].get_button(jumpbutton)
-					
+	
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = platform(event.pos)
 			platforms.add(newp)
 			screen.blit(newp.image,newp.rect)
-
-	for controller in enumerate(joysticks):
-		i = controller[0]
-		xspeed[i] = controller[1].get_axis(Xax)#prints unnecessary debug info
-		if abs(xspeed[i]) <= xtolerance:#if x is too close to zero
-			xspeed[i]=0
-	#End new joystick code (1.1)
 	
-	players.update()	
-	bills.update()
-	platforms.update()
-	
-	screen.blit(background_image, (0,0))
-	
-	#Draw marios
-	for player in players:
-		for m in player:
-			screen.blit(m.image, m.rect)
-	
-	#Bill collision detection
-	for b in bills.sprites():
-		screen.blit(b.image, b.rect)
+	for player in players.sprites():
+		actions = player.update(players.sprites(), platforms.sprites())
+		if isinstance(actions, int):
+			players.add(Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions))
+		elif isinstance(actions, dict):
+			if actions['Bullet']:
+				bullets.add(actions['Bullet'])
+			if actions['Grenade']:
+				grenades.add(actions['Grenade'])
 		
-		for player in players:
-			for m in player:
-				if pygame.sprite.collide_mask(b, m) and b.mode == 'fire':
-					#Bill Stomp
-					if m.rect.bottom < b.rect.top + m.y_vel + m.rect.height/2:
-						sfx.play(stomp_sound)
-						b.mode = 'die'
-						b.y_vel = -8
-						b.image = pygame.transform.flip(b.image,False, True)
-						m.jump_frames = 1
-						m.combo += 1
-						score += m.combo
-						if score > highscore:
-							highscore = score
-							highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
-						m.y_vel = -6
-						points.add(point(m.combo, b.rect.center))
-						#Announcer Combo Sounds
-						if m.combo == 3:
-							announcer.play(combo0)
-						elif m.combo == 6:
-							announcer.play(combo1)
-						elif m.combo == 9:
-							announcer.play(combo2)
-						elif m.combo == 12:
-							announcer.play(combo3)
-						elif m.combo >= 15:
-							announcer.play(combo4)
-					else:
-						m.kill()
-						sfx.play(die_sound)
-						death_timer = DEATH_TIMER
+	platforms.update()
+ 
+	#Draw Players
+	for p in players.sprites():
+		screen.blit(p.image, p.rect)
 
-		#Platform collision detection
+	#Draw Plaforms
 	for p in platforms.sprites():
 		screen.blit(p.image,p.rect)
+	
+	#Draw and Update Bullets
+	for b in bullets:
+		b.update(platforms,players)
+		screen.blit(b.image, b.rect)
+
+	#Update and Draw Grenades
+	for g in grenades:
+		g.update(platforms,players)
+		screen.blit(g.image, g.rect)
+
+	#Update Camera
+	camera.update()
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
 	pygame.display.update()
-	
+
 	cycles += 1
-	if death_timer > 0:
-		death_timer -= 1
-		if death_timer <= 0:
-			marios.add(Player())
-			marios.add(Player())
-			score = 0
-			scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 
-#Version History:
+#Version History
 
-	#1.1 - Added controller movement for one player --> detecting controller axis position causes noticeable lag in game. How to optimize?
+	#1.0 - Bullets
+	
+	#1.1 - Damage and Health
+	
+	#1.2 - Bullets face proper direction and have sound
 
-	#1.2 - Added controller movement and jumping for two players
+	#1.3 - Added grenades
 	
-	#1.3 - Added platforms and collision detection for them (very buggy atm)
+	#1.4 - Grenades bounce (but not enough)
 	
-	#1.4 - Softcoded number of players and joysticks
+	#1.5 - Grenades have friction
 	
-	#1.5 - Better collision detection plus left and right collision detection.
+	#1.6 - Grenade and player collisions fixed
 	
-	#1.6 - Optimized loop movement
-	
-	#1.7 - Added level saver/loader
-	
-	#1.8 - Fixed jumping issue
-	
-	#1.9 - Fixed ducking and stair issue
+	#2.0 - Marios respawn properly, fixed multiple bullet damage bug, bullet no longer hits the shooter automatically, grenades explode and do damage, fixed bullet collision bug, grenade speed influenced by movement speed, fixed grenades right and left collisions, fixed mario infinite jumping bug, grenade cooking enabled
 
-#Bugs:
+#BUGS:
 
-	#Up to quad-jumping possible with proper timing
-	#Sprite direction defaults to right-facing always
-	#Can get stuck on edges of platforms
-	#Mario can jump-duck through platforms (best demonstrated on "Maze.map")
-	
+	#*1* keyboard movement a little unresponsive (left-right war)
+
 #TO ADD:
 
 	#One melee and one range ability
 	#Different classes
+	#Camera scrolling
+	#Damage and health system
+	#HUD
+	
+#OPTIMIZATIONS:
+	
+	#Make grenades not bounce up and down when velocity is 0
+	#Make grenade explosions only do damage once, but at any point in time
+	
+#Attributions:
+	
+	#Sounds
+		#Laser Sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/ 
+			#- THE_bizniss CC Sample+ 1.0
+		#Hurt Sound - http://www.freesound.org/people/thecheeseman/sounds/44429/ 
+			#- thecheeseman CC Attribution 3.0
+		#Explosion Sound - PD, Media College
+		
+	#Images
+
+	#Code
