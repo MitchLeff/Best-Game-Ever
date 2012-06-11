@@ -61,10 +61,13 @@ class Player(pygame.sprite.Sprite):
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
 		self.health=100.0
+		self.maxHealth = 100
 		self.combo = 0
 		
-		self.healthBar = healthBar(self)
-		self.inventory = []
+		self.healthBar = HealthBar(self)
+		
+		self.currentItems = []
+		self.inventory = Inventory(self)
 		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
@@ -75,7 +78,7 @@ class Player(pygame.sprite.Sprite):
 			self.kill()
 			
 		self.healthBar.update()
-			
+		self.inventory.update()
 			
 		self.xspeed=xspeed
 		if self.xspeed!=0:

@@ -16,7 +16,7 @@ class Item(pygame.sprite.Sprite):
 	def update(self,players):
 		if self.collisionCheck(players):
 			self.use()
-			self.kill()
+			self.kill()#no longer blitted to screen, but still in player's currentItems list
 		screen.blit(self.image,self.rect)
 		
 	def collisionCheck(self,players):
@@ -27,7 +27,8 @@ class Item(pygame.sprite.Sprite):
 				abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
 					if pygame.sprite.collide_mask(m, self):
 						self.owner = m
-						self.owner.inventory.append(self)
+						if len(self.owner.currentItems) < 4:
+							self.owner.currentItems.append(self)
 						self.collided = True
 						return self.collided
 	def use(self):
@@ -39,13 +40,15 @@ class Medkit(Item):
 		
 	def use(self):
 		self.owner.health+=50
-		if self.owner.health>=100:
-			self.owner.health = 100
-		self.kill()
+		if self.owner.health>=self.owner.maxHealth:
+			self.owner.health = self.owner.maxHealth
 		
 class QuadDamage(Item):
 	def __init__(self,position):
 		super(QuadDamage,self).__init__('QuadDamage',position)
 		
 	def use(self):
-		self.owner.damage
+		self.owner.damage*=4
+		
+#TO ADD:
+	#ability for player to use stored items

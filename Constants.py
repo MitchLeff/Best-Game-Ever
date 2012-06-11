@@ -63,7 +63,7 @@ GRENADE_SPRITE_OPTIONS = [grenade_img,explosion_sprites]
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
 platform_img = pygame.image.load("images/platform.png").convert_alpha()
 
-HUDSIZE = 100
+HUDSIZE = 160
 width  = max(200,background_image.get_width())
 height = max(300,background_image.get_height()+HUDSIZE)
 size   = [width, height]
