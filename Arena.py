@@ -13,6 +13,7 @@ from glob import glob#glob allows use of wildcard for reading filenames
 
 from sprite_sheet_loader import *
 from Constants import *
+from Item import *
 from ObjectLists import *
 from Platforms import *
 from Projectiles import *
@@ -63,6 +64,7 @@ class Player(pygame.sprite.Sprite):
 		self.combo = 0
 		
 		self.healthBar = healthBar(self)
+		self.inventory = []
 		
 	def update(self,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
@@ -289,10 +291,17 @@ if len(players) < 4:
 	xspeed.append(0)
 	jumping.append(False)
 
+items = pygame.sprite.Group(Item('Medkit',(400,400)))
+itemSpawn = 10*FPS
+
 #MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
-
+	
+	if random.randint(0,itemSpawn)==itemSpawn:
+		items.add(Medkit((random.randint(width/2-300,width/2+300),\
+		random.randint(height/2-100,height/2+100))))
+		
 	pressed = pygame.key.get_pressed()
 
 	
@@ -481,6 +490,9 @@ while running:
 	for g in grenades:
 		g.update(platforms,players)
 		screen.blit(g.image, g.rect)
+		
+	for i in items:
+		i.update(players)
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))

@@ -48,6 +48,10 @@ soldier = (pygame.image.load("images/soldier.png").convert_alpha())
 medic = (pygame.image.load("images/medic.png").convert_alpha())
 PLAYER_SPRITE_OPTIONS = [sniper,engineer,soldier,medic]
 
+imageHealth = pygame.image.load("images/medkit.png").convert_alpha()
+imageQuadDamage = pygame.image.load("images/quadDamage.png").convert_alpha()
+itemImages = {'QuadDamage':imageQuadDamage, 'Medkit':imageHealth}
+
 #WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())
 BULLET_SPRITE_OPTIONS = [bullet_img]
