@@ -9,4 +9,20 @@ class Camera:
 		self.pos = [0,0]
 		
 	def update(self):
-		self.pos = [0 - self.mainPlayer.rect.centerx + self.windowSize[0]/2, 0 - self.mainPlayer.rect.centery + self.windowSize[1]/2]
+		self.pos = [self.mainPlayer.rect.centerx - self.windowSize[0]/2, self.mainPlayer.rect.centery - self.windowSize[1]/2]
+				
+		if self.pos[0] < 0:
+			self.pos[0] = 0
+		if self.pos[0] + self.windowSize[0] > self.levelSize[0]:
+			self.pos[0] = self.levelSize[0] - self.windowSize[0]
+			
+		if self.pos[1] < 0:
+			self.pos[1] = 0
+		if self.pos[1] + self.windowSize[1] > self.levelSize[1]:
+			self.pos[1] = self.levelSize[1] - self.windowSize[1]
+			
+	def mod(self, rect):
+		return (rect[0] - self.pos[0], rect[1] - self.pos[1])
+	
+	def mod2(self, rect):
+		return (rect[0] + self.pos[0], rect[1] + self.pos[1])

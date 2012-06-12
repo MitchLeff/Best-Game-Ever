@@ -63,6 +63,7 @@ class Bill(pygame.sprite.Sprite):
 			self.kill()
 
 class Player(pygame.sprite.Sprite):
+	global width, height
 	def __init__(self, spritesheet, controller, number):
 		pygame.sprite.Sprite.__init__(self)
 		
@@ -112,8 +113,7 @@ class Player(pygame.sprite.Sprite):
 		self.jumps_left = 2
 	
 	def update(self, players, platforms):
-		global width, height
-		#Joystack compatible
+		#Joystick compatible
 		
 		#Get the state of the controller to determine how to update
 		state = self.controller.getState()
@@ -122,7 +122,6 @@ class Player(pygame.sprite.Sprite):
 		if self.health <= 0:
 			sfx.play(die_sound)
 			self.kill()
-			self.dead = True
 			return self.player_number
 		
 		#Get direction being pressed and update accordingly

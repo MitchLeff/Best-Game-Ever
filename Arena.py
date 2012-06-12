@@ -92,7 +92,7 @@ while running:
 				platform_pos = chooseLevel()
 				platforms = pygame.sprite.Group()
 				for pos in platform_pos:
-					newp = platform(pos)
+					newp = Platform(pos)
 					platforms.add(newp)
 		
 		#QUIT
@@ -101,9 +101,8 @@ while running:
 			sys.exit()
 	
 		elif event.type == MOUSEBUTTONDOWN:
-			newp = platform(event.pos)
+			newp = Platform(camera.mod2(event.pos))
 			platforms.add(newp)
-			screen.blit(newp.image,newp.rect)
 	
 	for player in players.sprites():
 		actions = player.update(players.sprites(), platforms.sprites())
@@ -117,24 +116,27 @@ while running:
 		
 	platforms.update()
  
+ 	#Draw Background
+ 	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
+ 
 	#Draw Players
 	for p in players.sprites():
-		screen.blit(p.image, p.rect)
+		screen.blit(p.image, camera.mod(p.rect))
 
 	#Draw Plaforms
 	for p in platforms.sprites():
-		screen.blit(p.image,p.rect)
-	
+		screen.blit(p.image,camera.mod(p.rect))
+		
 	#Draw and Update Bullets
 	for b in bullets:
 		b.update(platforms,players)
-		screen.blit(b.image, b.rect)
+		screen.blit(b.image, camera.mod(b.rect))
 
 	#Update and Draw Grenades
 	for g in grenades:
 		g.update(platforms,players)
-		screen.blit(g.image, g.rect)
-
+		screen.blit(g.image, camera.mod(g.rect))
+		
 	#Update Camera
 	camera.update()
 

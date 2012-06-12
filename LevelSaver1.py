@@ -6,7 +6,7 @@
 #
 #Version = '1.0'
 
-import pygame,pickle, glob
+import pygame,pickle, glob, string
 from pygame.locals import *
 from glob import glob#allows wildcard calls to filenames
 
@@ -15,7 +15,7 @@ def br(lines=1):
 		print ""
 	
 def saveLevel(currentmap, mapname):
-	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
+	map = open(string.replace("maps/"+mapname+".map","\r",""),'w') #write only means we can create new files
 	try: 
 		pickle.dump(currentmap, map)#(object to save, file to save to)
 	except:

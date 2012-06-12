@@ -2,7 +2,7 @@
 import pygame
 from Constants import *
 #Platforms Class
-class platform(pygame.sprite.Sprite):
+class Platform(pygame.sprite.Sprite):
 	def __init__(self,pos):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = platform_img

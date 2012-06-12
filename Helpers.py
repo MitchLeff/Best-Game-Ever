@@ -1,4 +1,4 @@
-import pygame, random, sys, glob, pickle
+import pygame, random, sys, glob, pickle, string
 
 def init():
 	pygame.init()
@@ -22,7 +22,7 @@ def volumeChange(change):
 	pygame.mixer.music.set_volume(currentVol)
 
 def saveLevel(currentmap, mapname):
-	map = open("maps/"+mapname+".map",'w') #write only means we can create new files
+	map = open(string.replace("maps/"+mapname+".map","\r",""),'w') #write only means we can create new files
 	pickle.dump(currentmap, map)#(object to save, file to save to)
 	map.close()
 	print "Map saved as:",mapname+".map"
