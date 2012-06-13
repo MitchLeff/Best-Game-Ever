@@ -40,7 +40,7 @@ combo3 = pygame.mixer.Sound("sounds/godlike.wav")
 combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
 
 #LOAD IMAGES
-background_image = (pygame.image.load("images/spaceSmall.jpg").convert_alpha())
+background_image = (pygame.image.load("images/Level0.jpg").convert_alpha())
 
 sniper = (pygame.image.load("images/sniper.png").convert_alpha())
 engineer = (pygame.image.load("images/engineer.png").convert_alpha())
@@ -65,11 +65,9 @@ GRENADE_SPRITE_OPTIONS = [grenade_img,explosion_sprites]
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
 platform_img = pygame.image.load("images/platform.png").convert_alpha()
 
-width  = 600#max(200,background_image.get_width())
-height = 400#max(300,background_image.get_height())
+width  = 1000#max(200,background_image.get_width())
+height = 600#max(300,background_image.get_height())
 size   = [width, height]
-screen = pygame.display.set_mode(size)
-background = pygame.Surface(screen.get_size())
 
 levelWidth = background_image.get_size()[0]
 levelHeight = background_image.get_size()[1]

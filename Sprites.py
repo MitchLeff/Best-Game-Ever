@@ -232,51 +232,50 @@ class Player(pygame.sprite.Sprite):
 			
 		#PLATFORM COLLISIONS
 		for p in platforms:
-			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
-				if pygame.sprite.collide_mask(p, self):
-						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
+			if p.on_screen:
+				if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
+					if pygame.sprite.collide_mask(p, self):
+							if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
+								
+								#Top collision
+								if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
+								self.rect.bottom >= p.rect.top:
+									if DEBUG:
+										print "Collide top"
+									self.y_vel = 0
+									self.rect.bottom = p.rect.top
+									self.collided = True
+									self.resetJumps()
+								
+								#Bottom collision
+								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
+								self.rect.top <= p.rect.bottom:
+									if DEBUG:
+										print "Collide bottom"
+									self.y_vel = 0
+									self.rect.top = p.rect.bottom
+									self.collided = True
 							
-							#Top collision
-							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
-							self.rect.bottom >= p.rect.top:
-								if DEBUG:
-									print "Collide top"
-								self.y_vel = 0
-								self.rect.bottom = p.rect.top
-								self.collided = True
-								self.resetJumps()
-							
-							#Bottom collision
-							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
+							if self.rect.bottom >= p.rect.top+stair_tolerance and\
 							self.rect.top <= p.rect.bottom:
-								if DEBUG:
-									print "Collide bottom"
-								self.y_vel = 0
-								self.resetJumps()
-								self.jumped = False
-								self.rect.top = p.rect.bottom
-								self.collided = True
-						
-						if self.rect.bottom >= p.rect.top+stair_tolerance and\
-						self.rect.top <= p.rect.bottom:
-							
-							#Right Collision
-							if self.rect.left <= p.rect.right and\
-							self.rect.left >= p.rect.right-10:
-								if DEBUG:
-									print "Collide right"
-								self.x_vel = 0
-								self.rect.left = p.rect.right+1
-								self.collided = True
-							
-							#Left Collision
-							elif self.rect.right >= p.rect.left and\
-							self.rect.right <= p.rect.left+10:
-								if DEBUG:
-									print "Collide left"
-								self.x_vel = 0
-								self.rect.right = p.rect.left-1
-								self.collided = True
+								
+								#Right Collision
+								if self.rect.left <= p.rect.right and\
+								self.rect.left >= p.rect.right-10:
+									if DEBUG:
+										print "Collide right"
+									self.x_vel = 0
+									self.rect.left = p.rect.right+1
+									self.collided = True
+								
+								#Left Collision
+								elif self.rect.right >= p.rect.left and\
+								self.rect.right <= p.rect.left+10:
+									if DEBUG:
+										print "Collide left"
+									self.x_vel = 0
+									self.rect.right = p.rect.left-1
+									self.collided = True
 		return self.collided
 		
 	def shoot(self,players,dmg,speed):
@@ -323,4 +322,14 @@ class Platform(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = platform_img
 		self.rect = self.image.get_rect()
-		self.rect.midbottom = pos	
+		self.rect.midbottom = pos
+		self.on_screen = True	
+	
+	def update(self, camera):
+		if camera.pos[0] < self.rect.right and \
+		camera.pos[0] + camera.windowSize[0] > self.rect.left and \
+		camera.pos[1] < self.rect.bottom and \
+		camera.pos[1] + camera.windowSize[1] > self.rect.top:
+			self.on_screen = True
+		else:
+			self.on_screen = False

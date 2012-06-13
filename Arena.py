@@ -21,6 +21,7 @@ from Controller import *
 from Helpers import *
 from Camera import *
 
+screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
 highscore = 0
 score = 0
@@ -114,7 +115,7 @@ while running:
 			if actions['Grenade']:
 				grenades.add(actions['Grenade'])
 		
-	platforms.update()
+	platforms.update(camera)
  
  	#Draw Background
  	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
@@ -125,7 +126,8 @@ while running:
 
 	#Draw Plaforms
 	for p in platforms.sprites():
-		screen.blit(p.image,camera.mod(p.rect))
+		if p.on_screen:
+			screen.blit(p.image,camera.mod(p.rect))
 		
 	#Draw and Update Bullets
 	for b in bullets:
