@@ -80,8 +80,9 @@ class bullet(pygame.sprite.Sprite):
 			self.collided = True
 			
 		for p in platforms:
-			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and\
-			abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
+			#if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and\
+			#abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
+			if pygame.sprite.collide_rect(p, self):
 				if pygame.sprite.collide_mask(p, self):
 						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
 							#Top collision
