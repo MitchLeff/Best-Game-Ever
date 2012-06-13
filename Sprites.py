@@ -246,10 +246,15 @@ class Player(pygame.sprite.Sprite):
 									self.rect.bottom = p.rect.top
 									self.collided = True
 									self.resetJumps()
-									if p.directionList:
-										self.rect.centerx += p.directionList[0]* p.speedList[0]
-										self.rect.centery += p.directionList[1]* p.speedList[1]
-								
+									
+								if p.directionList:
+									if self.collided:
+										p.playersOnMe.append(self)
+									else:
+										try:
+											p.playersOnMe.remove(self)
+										except:
+											pass
 								#Bottom collision
 								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 								self.rect.top <= p.rect.bottom:
@@ -326,6 +331,8 @@ class Platform(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = pos
 		self.on_screen = True	
+		
+		self.playersOnMe = []
 	
 	def update(self, camera):
 		if camera.pos[0] < self.rect.right and \
@@ -349,6 +356,7 @@ class MovingPlatform(Platform):
 		self.speedList = speedList
 		self.directionList = [0,0]
 		self.counter = 0
+		self.playersOnMe = []
 		
 	def move(self, destination):
 		if self.rect.centerx < destination[0]:
@@ -363,6 +371,10 @@ class MovingPlatform(Platform):
 	
 		self.rect.centerx += self.speedList[0] * self.directionList[0]
 		self.rect.centery += self.speedList[1] * self.directionList[1]
+		
+		for p in self.playersOnMe:
+			p.rect.centerx += self.speedList[0] * self.directionList[0]
+			p.rect.centery += self.speedList[1] * self.directionList[1]
 		
 		if abs(self.rect.centerx - destination[0]) < self.speedList[0]:
 			self.rect.centerx = destination[0]
