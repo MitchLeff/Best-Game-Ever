@@ -91,3 +91,5 @@ fireleft = False
 fireright = False
 jumpbutton = 0
 quitbutton = 6#6 is back button
+
+pointFont = pygame.font.SysFont('ocraextended',24)

@@ -57,7 +57,7 @@ class Bullet(pygame.sprite.Sprite):
 				self.rect.top += 1
 				if self.collisioncheck(platforms,players):
 					break
-		if self.collided:
+		if self.collided or self.rect.left > levelWidth or self.rect.right < 0:
 			self.kill()
 			return
 			

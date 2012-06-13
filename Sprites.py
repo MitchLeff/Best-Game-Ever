@@ -246,6 +246,9 @@ class Player(pygame.sprite.Sprite):
 									self.rect.bottom = p.rect.top
 									self.collided = True
 									self.resetJumps()
+									if p.directionList:
+										self.rect.centerx += p.directionList[0]* p.speedList[0]
+										self.rect.centery += p.directionList[1]* p.speedList[1]
 								
 								#Bottom collision
 								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
@@ -253,7 +256,7 @@ class Player(pygame.sprite.Sprite):
 									if DEBUG:
 										print "Collide bottom"
 									self.y_vel = 0
-									self.rect.top = p.rect.bottom
+									self.rect.top = p.rect.bottom - 1
 									self.collided = True
 							
 							if self.rect.bottom >= p.rect.top+stair_tolerance and\
@@ -303,7 +306,6 @@ class Player(pygame.sprite.Sprite):
 			print item.rect.midbottom
 		return item
 
-pointFont = pygame.font.SysFont('ocraextended',24)
 class Point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):
 		pygame.sprite.Sprite.__init__(self)
@@ -333,3 +335,48 @@ class Platform(pygame.sprite.Sprite):
 			self.on_screen = True
 		else:
 			self.on_screen = False
+
+class MovingPlatform(Platform):
+	def __init__(self, positionList, speedList):
+		
+		pygame.sprite.Sprite.__init__(self)
+		self.image = platform_img
+		self.rect = self.image.get_rect()
+		self.rect.midbottom = positionList[0]
+		self.on_screen = True	
+		
+		self.positionList = positionList
+		self.speedList = speedList
+		self.directionList = [0,0]
+		self.counter = 0
+		
+	def move(self, destination):
+		if self.rect.centerx < destination[0]:
+			self.directionList[0] = 1
+		else:
+			self.directionList[0] = -1
+	
+		if self.rect.centery < destination[1]:
+			self.directionList[1] = 1
+		else:
+			self.directionList[1] = -1
+	
+		self.rect.centerx += self.speedList[0] * self.directionList[0]
+		self.rect.centery += self.speedList[1] * self.directionList[1]
+		
+		if abs(self.rect.centerx - destination[0]) < self.speedList[0]:
+			self.rect.centerx = destination[0]
+			self.counter += 1
+			
+		
+	def update(self, camera):
+		
+		if camera.pos[0] < self.rect.right and \
+		camera.pos[0] + camera.windowSize[0] > self.rect.left and \
+		camera.pos[1] < self.rect.bottom and \
+		camera.pos[1] + camera.windowSize[1] > self.rect.top:
+			self.on_screen = True
+		else:
+			self.on_screen = False
+		
+		self.move(self.positionList[self.counter % len(self.positionList)])

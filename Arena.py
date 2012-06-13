@@ -56,6 +56,19 @@ for i in enumerate(controllers):
 #Create camera
 camera = Camera(players.sprites()[0], size, background_image.get_size())
 
+#Test Moving Platforms
+mp1 = MovingPlatform( [[100,1000], [300,1000]], [1,0])
+mp2 = MovingPlatform( [[500,900], [300,1000]], [2,0])
+mp3 = MovingPlatform( [[500,800], [700,1000]], [4,0])
+mp4 = MovingPlatform( [[900,700], [700,1000]], [8,0])
+mp5 = MovingPlatform( [[100,600], [levelWidth - 100,1000]], [20,0])
+platforms.add(mp1)
+#platforms.add(mp2)
+#platforms.add(mp3)
+#platforms.add(mp4)
+platforms.add(mp5)
+
+
 #MAIN GAME LOOP
 while running:
 	clock.tick(FPS)
