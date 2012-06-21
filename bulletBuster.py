@@ -67,10 +67,13 @@ class bill(pygame.sprite.Sprite):
 
 		if size < .025:
 			self.image = megaBill_image
+			self.scoreMult = 3
 		elif size < .1:
 			self.image = bigBill_image
+			self.scoreMult = 2
 		else:
 			self.image = bill_image
+			self.scoreMult = 1
 		self.rect = self.image.get_rect()
 
 		self.direction = random.choice(directions)
@@ -300,13 +303,13 @@ while running:
 					m.jump_frames = 1
 					m.jumped = False
 					m.combo += 1
-					score += m.combo
+					score += m.combo * b.scoreMult
 					if score > highscore:
 						highscore = score
 						highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 					m.y_vel = -6
 					m.rect.top += m.y_vel
-					points.add(point(m.combo, b.rect.center))
+					points.add(point(m.combo * b.scoreMult, b.rect.center))
 					if m.combo == 3:
 						announcer.play(combo0)
 					elif m.combo == 6:
