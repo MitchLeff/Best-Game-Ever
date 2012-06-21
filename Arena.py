@@ -14,10 +14,9 @@ from glob import glob#glob allows use of wildcard for reading filenames
 from sprite_sheet_loader import *
 from Constants import *
 from Item import *
-from ObjectLists import *
 from Platforms import *
 from Projectiles import *
-from Sprites import *
+from SpritesVectorTest import *
 from HUD import *
 
 
@@ -44,7 +43,6 @@ players2 = pygame.sprite.Group(Player(2))
 players3 = pygame.sprite.Group(Player(3))
 players4 = pygame.sprite.Group(Player(4))
 totalplayers = [players1,players2,players3,players4]
-players = []
 
 for i in range(0,pygame.joystick.get_count()):
 	joysticks.append(pygame.joystick.Joystick(i))
@@ -66,7 +64,6 @@ if len(players) < 4:
 	xspeed.append(0)
 	jumping.append(False)
 
-items = pygame.sprite.Group()
 itemSpawn = 10*FPS
 itemdeSpawn = 3*FPS
 itemSpawned = False
@@ -131,10 +128,10 @@ while running:
 			elif event.key == K_2:
 				del platforms
 				platform_pos = chooseLevel()
-				platforms = pygame.sprite.Group()
 				for pos in platform_pos:
 					newp = platform(pos)
 					platforms.add(newp)
+					print platforms
 		
 			#Keyboard Player 1
 			elif event.key == K_w:
@@ -250,7 +247,7 @@ while running:
 	
 	for player in enumerate(players):
 		i=player[0]
-		player[1].update(xspeed[i],jumping[i])
+		player[1].update(platforms,xspeed[i],jumping[i])
 	
 	platforms.update()
 

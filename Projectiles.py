@@ -134,6 +134,7 @@ class bullet(pygame.sprite.Sprite):
 		
 class grenade(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):
+		self.isGrenade = True
 		pygame.sprite.Sprite.__init__(self)
 		self.sprite_options = GRENADE_SPRITE_OPTIONS
 		self.image = self.sprite_options[0]
@@ -348,3 +349,6 @@ class grenade(pygame.sprite.Sprite):
 							self.collided = True
 							hurt.play()
 		return self.collided
+		
+#BUGS:
+	#If player dies from grenade, the damage continues to apply to player's new sprite even if grenade blew up elsewhere

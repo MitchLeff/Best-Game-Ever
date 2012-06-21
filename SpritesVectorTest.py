@@ -8,27 +8,45 @@ from Projectiles import *
 #Collision class should return type of collision and object collided with
 #How to make this run only once for the entire movement?
 class Collision():
-	def __init__(self,collidingObject,platforms,players,enemies,items):
+	def __init__(self,collidingObject):
 		self.collidingObject = collidingObject
-		self.platforms = platforms
-		self.players = players
-		self.enemies = enemies
-		self.items = items
-		
-		self.collidedWith = [] #array of objects with which the collidingObject collided		
-		
-		self.checkAll()
+		self.collidedWith = [] #array of objects with which the collidingObject collided
+		#Relative position of collidingObject to collidable object
+		self.above
+		self.under
+		self.left
+		self.right
 
-	def checkAll(self):
+	def checkAll(self,thePlatforms):
 		#Goes through all possible collisions
+		self.platforms = thePlatforms
+		self.players = players
+		#self.enemies = enemies
+		self.items = items
 		self.collision = False
 		if self.collidingObject.isPlayer:
+			self.checkVector()
 			self.boundsCollision()
 			self.platformCollision()
 			self.playerCollision()
 			#self.enemyCollision() --> no enemies yet
 			self.itemCollision()
 		return self.collision
+	
+	def checkVector(self):
+		result = self.collidingObject.rect
+		#result.top += self.collidingObject.y_vel
+		#result.left += self.collidingObject.x_vel
+		for p in self.platforms:
+			xdistanceFromObject = self.collidingObject.rect.center[0] - p.rect.center[0]
+			ydistanceFromObject = self.collidingObject.rect.center[1] - p.rect.center[1]
+			closestObject
+			if (DEBUG):
+				print "Distance from object:",distanceFromObject,\
+				"Resultant distance from object:",resultantDistance
+				br()
+				#self.collision = True
+				#return self.collision
 	
 	def boundsCollision(self):
 		#Out-of-Bounds Check --> only affects player and enemy sprites
@@ -105,21 +123,17 @@ class Collision():
 		#Returns True if self.collidingObject collides with a player
 		for player in self.players:
 			for m in player:
-				"""if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-				abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:"""
 				if pygame.sprite.collide_rect(m,self.collidingObject):
 					if pygame.sprite.collide_mask(m, self.collidingObject):
 						self.collision = True
-						"""m.health -= self.damage
+						m.health -= self.damage
 						if DEBUG:
 							print m.health
-						hurt.play()"""
+						hurt.play()
 				#return self.collision
 	
 	def enemyCollision(self):
 		for enemy in self.enemies:
-			"""if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-			abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:"""
 			if pygame.sprite.collide_rect(enemy,self.collidingObject):
 				if pygame.sprite.collide_mask(enemy, self.collidingObject):
 					self.collision = True
@@ -127,8 +141,6 @@ class Collision():
 		
 	def itemCollision(self):
 		for item in self.items:
-			"""if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-			abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:"""
 			if pygame.sprite.collide_rect(item,self.collidingObject):
 				if pygame.sprite.collide_mask(item, self.collidingObject):
 					self.collision = True
@@ -175,7 +187,7 @@ class Player(pygame.sprite.Sprite):
 		self.jump_frames = 0
 		self.jumped = True
 		self.jumping = False
-		self.collisionHandler = Collision(self,platforms,players,0,items)
+		self.collisionHandler = Collision(self)
 		
 		self.health=100.0
 		self.maxHealth = 100
@@ -186,7 +198,7 @@ class Player(pygame.sprite.Sprite):
 		self.currentItems = []
 		self.inventory = Inventory(self)
 		
-	def update(self,xspeed=0,UP=False):
+	def update(self,thePlatforms,xspeed=0,UP=False):
 		global DOWN, RIGHT, LEFT, height, width, platforms
 		#Determine x direction and acceleration 
 		#Joystack compatible
@@ -233,10 +245,9 @@ class Player(pygame.sprite.Sprite):
 		elif self.y_vel <= -1*self.max_speed_y:
 			self.y_vel = -1*self.max_speed_y
 		
-		self.movementVector = (self.x_vel**2+self.y_vel**2)**0.5
-		#self.collisionVector = 
+		self.collisionHandler.checkAll(thePlatforms)
 		
-		#Update position
+		"""#Update position
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
@@ -252,7 +263,7 @@ class Player(pygame.sprite.Sprite):
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				self.collisionHandler.checkAll()
+				self.collisionHandler.checkAll()"""
 
 		#Set Image
 		"""if self.jump_frames != 0: #Jump image if jumped

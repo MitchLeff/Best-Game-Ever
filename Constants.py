@@ -90,3 +90,11 @@ fireleft = False
 fireright = False
 jumpbutton = 0
 quitbutton = 6#6 is back button
+
+#Item Lists
+platforms = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+grenades = pygame.sprite.Group()
+points = pygame.sprite.Group()
+items = pygame.sprite.Group()
+players = []
