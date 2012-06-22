@@ -247,14 +247,14 @@ class Player(pygame.sprite.Sprite):
 									self.collided = True
 									self.resetJumps()
 									
-								if p.directionList:
-									if self.collided:
-										p.playersOnMe.append(self)
-									else:
-										try:
-											p.playersOnMe.remove(self)
-										except:
-											pass
+#								if p.directionList:
+#									if self.collided:
+#										p.playersOnMe.append(self)
+#									else:
+#										try:
+#											p.playersOnMe.remove(self)
+#										except:
+#											pass
 								#Bottom collision
 								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 								self.rect.top <= p.rect.bottom:
