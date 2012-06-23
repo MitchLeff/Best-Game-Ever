@@ -1,16 +1,21 @@
 #CONSTANTS
-FPS = 900
-DEFAULT_GRID_SQUARE_WIDTH = 22 #Default grid square width to be used
+FPS = 60
+DEFAULT_GRID_SQUARE_WIDTH = 40 #Default grid square width to be used
 GRID_SQUARE_WIDTH = DEFAULT_GRID_SQUARE_WIDTH
-STARTING_BILLS = 60
-DRAW_SQUARES = False #Will only work on Grid-zone mode.
-INCREMENT = False #Increments the grid square size every INCREMENT_CYCLES cycles
+STARTING_BILLS = 20
+MIN_SPEED = 2 #Min speed at which bills can move
+MAX_SPEED = 5 #Max speed at which bills can move
+
+#Running Options
+COLLISSION_DETECTION_MODE = 1 #0 for n^2 object-to-object checks, 1 for grid-zone based checks, 2 for priority checklist
+PRINT_HITS = False #Will print 'HIT' each time objects collide
+DRAW_SQUARES = True #Will only work on Grid-zone mode.
+PRINT_FPS_AND_NUM = True #Prints FPS and Number of Bills each cycle
+RUNNING_MODE = 0#0 is free run mode, 1 is INCREMENT mode, 2 is Min/MaxFPS mode
+INCREMENT = RUNNING_MODE == 1 #Increments the grid square size every INCREMENT_CYCLES cycles
 INCREMENT_CYCLES = 20 #Number of cycles to go through to obtain an average fps for each grid size
 INCREMENT_RANGE = 190 #Number of times to increment the grid square size
 INCREMENTATIONS = 100 #Number of objects to make while incrementing
-COLLISSION_DETECTION_MODE = 1 #0 for n^2 object-to-object checks, 1 for grid-zone based checks, 2 for priority checklist
-SPEED = 2 #Speed at which bills move
-PRINT_HITS = False #Will print 'HIT' each time objects collide
 
 #IMPORTS
 import pygame, random, time
@@ -63,7 +68,7 @@ class bill(pygame.sprite.Sprite):
 		dirChoice = random.randint(0,3)
 		
 		self.dir = directions[dirChoice]
-		self.speed = SPEED
+		self.speed = random.choice(range(MIN_SPEED,MAX_SPEED))
 		
 
 		self.squaresImIn = []
@@ -161,6 +166,9 @@ if INCREMENT:#Initialize variables for an Incrementation run
 	maxFPS = 1
 	bestSquareSize = 1
 	ss = 0
+else:
+	minFPS = 1000
+	maxFPS = 0
 
 while running:
 	clock.tick(FPS)
@@ -174,6 +182,11 @@ while running:
 				bill(bills)
 			elif event.key == K_p:
 				time.sleep(5)
+			elif event.key == K_DELETE:
+				b = bills.sprites()[0]
+				for square in b.squaresImIn:
+					square.objectsContained.remove(b)
+				b.kill()
 				
 	screen.fill((255,255,255))
 	bills.update()
@@ -186,7 +199,6 @@ while running:
 						print "HIT"
 
 	if COLLISSION_DETECTION_MODE == 1:
-		c = 0
 		for row in gridSquares:
 			for square in row:
 				if len(square.objectsContained) > 1:
@@ -194,7 +206,6 @@ while running:
 						pygame.draw.rect(screen, (0,0,255), square.rect)
 					for b in square.objectsContained:
 						for bb in square.objectsContained:
-							c += 1
 							if pygame.sprite.collide_mask(b, bb) and b != bb:
 								if DRAW_SQUARES:
 									pygame.draw.rect(screen, (255,0,0), square.rect)
@@ -204,17 +215,14 @@ while running:
 					if DRAW_SQUARES:
 						pygame.draw.rect(screen, (0,255,0), square.rect)
 				square.draw()
-		print c
 	elif COLLISSION_DETECTION_MODE == 2:
 		#print len(priorityCheckList)
-		c = 0
 		for square in priorityCheckList:
 			if len(square.objectsContained) > 1:
 				if DRAW_SQUARES:
 					pygame.draw.rect(screen, (0,0,255), square.rect)
 				for b in square.objectsContained:
 					for bb in square.objectsContained:
-						c += 1
 						if pygame.sprite.collide_mask(b, bb) and b != bb:
 							if DRAW_SQUARES:
 								pygame.draw.rect(screen, (255,0,0), square.rect)
@@ -224,7 +232,6 @@ while running:
 				if DRAW_SQUARES:
 					pygame.draw.rect(screen, (0,255,0), square.rect)
 			square.draw()
-		print c
 		priorityCheckList = []
 	
 	for b in bills:
@@ -256,7 +263,15 @@ while running:
 				print i
 			running = False
 			
-	else:
+	elif RUNNING_MODE == 2:
+		currFPS = int(clock.get_fps())
+		if currFPS >= 2:
+			minFPS = min(currFPS, minFPS)
+			maxFPS = max(currFPS, maxFPS)
+		if not cycles % 500 and cycles:
+			print "Min FPS:",minFPS,"	Max FPS:", maxFPS,"	# of Bills:", len(bills.sprites())
+			running = False
+	if PRINT_FPS_AND_NUM:
 		print clock.get_fps(), len(bills.sprites())
 			
 	pygame.display.flip()
