@@ -20,7 +20,7 @@ from Sprites import *
 from Controller import *
 from Helpers import *
 from Camera import *
-
+from Collision import *
 screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
 highscore = 0
@@ -68,6 +68,9 @@ platforms.add(mp1)
 #platforms.add(mp4)
 platforms.add(mp5)
 
+
+#Initialize collision grid
+collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
 #MAIN GAME LOOP
 while running:
@@ -129,15 +132,15 @@ while running:
 				grenades.add(actions['Grenade'])
 		
 	platforms.update(camera)
- 
- 	#Draw Background
- 	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
- 
+	 
+	#Draw Background
+	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
+
 	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, camera.mod(p.rect))
 
-	#Draw Plaforms
+	#Draw Platforms
 	for p in platforms.sprites():
 		if p.on_screen:
 			screen.blit(p.image,camera.mod(p.rect))
@@ -151,6 +154,16 @@ while running:
 	for g in grenades:
 		g.update(platforms,players)
 		screen.blit(g.image, camera.mod(g.rect))
+
+	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
+	for sprite in collidableSprites:
+		collisionGrid = updateGrid(sprite, collisionGrid)
+	checkForCollisions(collisionGrid)
+	
+	for row in collisionGrid:
+		for square in row:
+			square.draw(screen, camera)
+
 		
 	#Update Camera
 	camera.update()
@@ -160,6 +173,8 @@ while running:
 	pygame.display.update()
 
 	cycles += 1
+	
+	print clock.get_fps()
 
 #Version History
 

@@ -564,23 +564,23 @@ class mario(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				if self.collisioncheck():
-					break 
+#				if self.collisioncheck():
+#					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				if self.collisioncheck():
-					break
+#				if self.collisioncheck():
+#					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				if self.collisioncheck():
-					break
+#				if self.collisioncheck():
+#					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				if self.collisioncheck():
-					break
+#				if self.collisioncheck():
+#					break
 		#Set Image
 		if self.jump_frames != 0: #Jump image if jumped
 			self.image = self.sprite_options[1]

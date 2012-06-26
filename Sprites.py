@@ -52,6 +52,9 @@ class Bill(pygame.sprite.Sprite):
 			g.add(self)
 
 		self.mode = "fire"
+		
+		#Collision Detection
+		self.squaresImIn = []
 
 	def update(self):
 		if self.mode == 'fire':
@@ -107,6 +110,9 @@ class Player(pygame.sprite.Sprite):
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
 		self.health = 100.0
+		
+		#Collision Detection
+		self.squaresImIn = []
 	
 	def resetJumps(self):
 		self.jumped = False
@@ -167,23 +173,23 @@ class Player(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				if self.collisioncheck(platforms):
-					break 
+#				if self.collisioncheck(platforms):
+#					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				if self.collisioncheck(platforms):
-					break
+#				if self.collisioncheck(platforms):
+#					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				if self.collisioncheck(platforms):
-					break
+#				if self.collisioncheck(platforms):
+#					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				if self.collisioncheck(platforms):
-					break
+#				if self.collisioncheck(platforms):
+#					break
 		#Set Image
 		if self.x_vel == 0:
 			self.image = self.sprite_options[0]
@@ -247,14 +253,6 @@ class Player(pygame.sprite.Sprite):
 									self.collided = True
 									self.resetJumps()
 									
-#								if p.directionList:
-#									if self.collided:
-#										p.playersOnMe.append(self)
-#									else:
-#										try:
-#											p.playersOnMe.remove(self)
-#										except:
-#											pass
 								#Bottom collision
 								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
 								self.rect.top <= p.rect.bottom:
@@ -332,7 +330,8 @@ class Platform(pygame.sprite.Sprite):
 		self.rect.midbottom = pos
 		self.on_screen = True	
 		
-		self.playersOnMe = []
+		#Collision Detection
+		self.squaresImIn = []
 	
 	def update(self, camera):
 		if camera.pos[0] < self.rect.right and \
@@ -356,7 +355,9 @@ class MovingPlatform(Platform):
 		self.speedList = speedList
 		self.directionList = [0,0]
 		self.counter = 0
-		self.playersOnMe = []
+		
+		#Collision Detection
+		self.squaresImIn = []
 		
 	def move(self, destination):
 		if self.rect.centerx < destination[0]:
@@ -371,11 +372,7 @@ class MovingPlatform(Platform):
 	
 		self.rect.centerx += self.speedList[0] * self.directionList[0]
 		self.rect.centery += self.speedList[1] * self.directionList[1]
-		
-		for p in self.playersOnMe:
-			p.rect.centerx += self.speedList[0] * self.directionList[0]
-			p.rect.centery += self.speedList[1] * self.directionList[1]
-		
+	
 		if abs(self.rect.centerx - destination[0]) < self.speedList[0]:
 			self.rect.centerx = destination[0]
 			self.counter += 1

@@ -17,6 +17,8 @@ BULLET_DAMAGE = 10.0
 GRENADE_DAMAGE = 80.0
 GRENADE_VELOCITY = 10.0
 DEBUG = False
+GRID_SQUARE_LENGTH = 40 #Default grid square width to be used
+DRAW_SQUARES = True
 
 #Make Clock
 clock = pygame.time.Clock()

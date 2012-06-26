@@ -26,3 +26,6 @@ class Camera:
 	
 	def mod2(self, rect):
 		return (rect[0] + self.pos[0], rect[1] + self.pos[1])
+	
+	def mod3(self, rect):
+		return (rect[0] - self.pos[0], rect[1] - self.pos[1], rect.width, rect.height)

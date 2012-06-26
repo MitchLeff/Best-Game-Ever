@@ -1,8 +1,8 @@
 #CONSTANTS
-FPS = 60
-DEFAULT_GRID_SQUARE_WIDTH = 40 #Default grid square width to be used
+FPS = 900
+DEFAULT_GRID_SQUARE_WIDTH = 41 #Default grid square width to be used1
 GRID_SQUARE_WIDTH = DEFAULT_GRID_SQUARE_WIDTH
-STARTING_BILLS = 20
+STARTING_BILLS = 3
 MIN_SPEED = 2 #Min speed at which bills can move
 MAX_SPEED = 5 #Max speed at which bills can move
 
@@ -10,7 +10,7 @@ MAX_SPEED = 5 #Max speed at which bills can move
 COLLISSION_DETECTION_MODE = 1 #0 for n^2 object-to-object checks, 1 for grid-zone based checks, 2 for priority checklist
 PRINT_HITS = False #Will print 'HIT' each time objects collide
 DRAW_SQUARES = True #Will only work on Grid-zone mode.
-PRINT_FPS_AND_NUM = True #Prints FPS and Number of Bills each cycle
+PRINT_FPS_AND_NUM = False #Prints FPS and Number of Bills each cycle
 RUNNING_MODE = 0#0 is free run mode, 1 is INCREMENT mode, 2 is Min/MaxFPS mode
 INCREMENT = RUNNING_MODE == 1 #Increments the grid square size every INCREMENT_CYCLES cycles
 INCREMENT_CYCLES = 20 #Number of cycles to go through to obtain an average fps for each grid size

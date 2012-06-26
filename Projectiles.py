@@ -31,6 +31,8 @@ class Bullet(pygame.sprite.Sprite):
 		#PARAMETERS
 		self.damage = damage
 		
+		#Collision Detection
+		self.squaresImIn = []
 	def update(self, platforms, players):
 
 		self.x_vel += self.x_accell
@@ -40,23 +42,23 @@ class Bullet(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				if self.collisioncheck(platforms,players):
-					break 
+#				if self.collisioncheck(platforms,players):
+#					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				if self.collisioncheck(platforms,players):
-					break
+#				if self.collisioncheck(platforms,players):
+#					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				if self.collisioncheck(platforms,players):
-					break
+#				if self.collisioncheck(platforms,players):
+#					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				if self.collisioncheck(platforms,players):
-					break
+#				if self.collisioncheck(platforms,players):
+#					break
 		if self.collided or self.rect.left > levelWidth or self.rect.right < 0:
 			self.kill()
 			return
@@ -170,6 +172,9 @@ class Grenade(pygame.sprite.Sprite):
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
+		#Collision Detection
+		self.squaresImIn = []
+		
 	def update(self,platforms,players):
 	
 		self.counter += 1
@@ -219,23 +224,23 @@ class Grenade(pygame.sprite.Sprite):
 			if (self.x_vel<0):
 				for i in range(abs(int(self.x_vel))):
 					self.rect.left += -1
-					if self.collisioncheck(platforms,players):
-						break 
+#					if self.collisioncheck(platforms,players):
+#						break 
 			elif (self.x_vel>0):
 				for i in range(int(self.x_vel)):
 					self.rect.left += 1
-					if self.collisioncheck(platforms,players):
-						break
+#					if self.collisioncheck(platforms,players):
+#						break
 			if (self.y_vel<0):
 				for i in range(abs(int(self.y_vel))):
 					self.rect.top += -1
-					if self.collisioncheck(platforms,players):
-						break
+#					if self.collisioncheck(platforms,players):
+#						break
 			elif (self.y_vel>0):
 				for i in range(int(self.y_vel)):
 					self.rect.top += 1
-					if self.collisioncheck(platforms,players):
-						break
+#					if self.collisioncheck(platforms,players):
+#						break
 			
 			#Check to flip for going left
 			if self.xdirection == -1:
