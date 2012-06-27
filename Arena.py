@@ -16,7 +16,7 @@ from Constants import *
 from Item import *
 from Platforms import *
 from Projectiles import *
-from SpritesVectorTest import *
+from Sprites import *
 from HUD import *
 
 
@@ -247,7 +247,7 @@ while running:
 	
 	for player in enumerate(players):
 		i=player[0]
-		player[1].update(platforms,xspeed[i],jumping[i])
+		player[1].update(xspeed[i],jumping[i])
 	
 	platforms.update()
 
