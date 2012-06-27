@@ -12,11 +12,7 @@ class Collision():
 		self.collidingObject = collidingObject
 		self.collidedWith = [] #array of objects with which the collidingObject collided
 		#Relative position of collidingObject to collidable object
-		self.above
-		self.under
-		self.left
-		self.right
-
+	
 	def checkAll(self,thePlatforms):
 		#Goes through all possible collisions
 		self.platforms = thePlatforms
@@ -40,7 +36,6 @@ class Collision():
 		for p in self.platforms:
 			xdistanceFromObject = self.collidingObject.rect.center[0] - p.rect.center[0]
 			ydistanceFromObject = self.collidingObject.rect.center[1] - p.rect.center[1]
-			closestObject
 			if (DEBUG):
 				print "Distance from object:",distanceFromObject,\
 				"Resultant distance from object:",resultantDistance
