@@ -1,6 +1,7 @@
 from Helpers import *
 from Constants import *
 from Projectiles import *
+from HUD import *
 import pygame, random, sys, glob, pickle
 
 init()
@@ -72,6 +73,7 @@ class Player(pygame.sprite.Sprite):
 		
 		self.controller = controller
 		self.player_number = number
+		self.playerNum = 1
 		
 		self.sprite_options = spritesheet
 		self.image = self.sprite_options[0]
@@ -109,8 +111,12 @@ class Player(pygame.sprite.Sprite):
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
 		
-		self.health = 100.0
-		
+		self.maxHealth = 100.0
+		self.health = self.maxHealth
+		self.healthBar = HealthBar(self)
+		self.inventory = Inventory(self)
+		self.currentItems = []
+
 		#Collision Detection
 		self.squaresImIn = []
 	
@@ -173,23 +179,23 @@ class Player(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-#				if self.collisioncheck(platforms):
-#					break 
+				if self.collisioncheck(platforms):
+					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-#				if self.collisioncheck(platforms):
-#					break
+				if self.collisioncheck(platforms):
+					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-#				if self.collisioncheck(platforms):
-#					break
+				if self.collisioncheck(platforms):
+					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-#				if self.collisioncheck(platforms):
-#					break
+				if self.collisioncheck(platforms):
+					break
 		#Set Image
 		if self.x_vel == 0:
 			self.image = self.sprite_options[0]
@@ -219,6 +225,9 @@ class Player(pygame.sprite.Sprite):
 			except:
 				pass
 			self.grenading = False
+			
+		self.inventory.update()
+		self.healthBar.update()
 		
 		return actions
 		
@@ -237,7 +246,7 @@ class Player(pygame.sprite.Sprite):
 			self.x_acceleration = 0
 			
 		#PLATFORM COLLISIONS
-		for p in platforms:
+		"""for p in platforms:
 			if p.on_screen:
 				if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
 					if pygame.sprite.collide_mask(p, self):
@@ -282,7 +291,7 @@ class Player(pygame.sprite.Sprite):
 									self.x_vel = 0
 									self.rect.right = p.rect.left-1
 									self.collided = True
-		return self.collided
+		return self.collided"""
 		
 	def shoot(self,players,dmg,speed):
 		if self.xdirection>0:#facing right

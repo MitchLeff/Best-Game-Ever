@@ -67,9 +67,18 @@ GRENADE_SPRITE_OPTIONS = [grenade_img,explosion_sprites]
 bill_image = pygame.image.load("images/bill.png").convert_alpha()
 platform_img = pygame.image.load("images/platform.png").convert_alpha()
 
+#MENU IMAGES
+BUTTON_IMAGE = pygame.image.load("images/button.png").convert_alpha()
+BUTTON_CLICKED_IMAGE = pygame.image.load("images/button_clicked.png").convert_alpha()
+MENU_BACKGROUND = pygame.image.load("images/menu_background.png").convert_alpha()
+
 width  = 1000#max(200,background_image.get_width())
 height = 600#max(300,background_image.get_height())
+HUDSIZE = 200
 size   = [width, height]
+screen = pygame.display.set_mode(size)
+background = pygame.Surface((width,height))
+HUD = background.subsurface((0,height-HUDSIZE),(width,HUDSIZE))
 
 levelWidth = background_image.get_size()[0]
 levelHeight = background_image.get_size()[1]

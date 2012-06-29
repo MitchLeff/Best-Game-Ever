@@ -14,13 +14,15 @@ from glob import glob#glob allows use of wildcard for reading filenames
 from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
-from Platforms import *
+#from Platforms import *
 from Projectiles import *
 from Sprites import *
 from Controller import *
 from Helpers import *
 from Camera import *
-from Collision import *
+from HUD import *
+###from Collision import *
+from Menu import *
 screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
 highscore = 0
@@ -33,9 +35,9 @@ scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
-pygame.mixer.music.load("sounds/Five Armies.mp3")
+pygame.mixer.music.load("sounds/Crystal Mix %.mp3")
 pygame.mixer.music.play(-1)#infinite loop
-pygame.mixer.music.set_volume(.5)
+pygame.mixer.music.set_volume(1.0)
 
 pygame.joystick.init()
 
@@ -54,7 +56,7 @@ for i in enumerate(controllers):
 	players.add(Player(PLAYER_SPRITE_OPTIONS[i[0]%4], i[1], i[0]))
 
 #Create camera
-camera = Camera(players.sprites()[0], size, background_image.get_size())
+camera = Camera(players.sprites()[0], (width,height-HUDSIZE), background_image.get_size())
 
 #Test Moving Platforms
 mp1 = MovingPlatform( [[100,1000], [300,1000]], [1,0])
@@ -70,17 +72,37 @@ platforms.add(mp5)
 
 
 #Initialize collision grid
-collisionGrid = createGrid(GRID_SQUARE_LENGTH)
+###collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
-#MAIN GAME LOOP
+def menu():
+	startButton = StartGame((width/2-100,height/2))
+	buttons = [startButton]
+	mainMenu = Menu(buttons)
+	MENU = True
+	while MENU:
+		for event in pygame.event.get():
+			if (event.type==MOUSEBUTTONDOWN):
+				for button in mainMenu.buttons:
+					if button.clicked(event.pos):
+						return#each button must return True so that a new loop can start
+			elif (event.type==QUIT):
+				pygame.quit()
+				sys.exit()
+		mainMenu.update()
+		pygame.display.update()
+
+menu()
+
+currentPlayer = 0
 while running:
 	clock.tick(FPS)
+	HUD.fill((0,0,0))
 	for event in pygame.event.get():
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
 			if event.key == K_ESCAPE:
 				running = False
-			
+
 			#Toggle debug mode
 			elif event.key == K_BACKQUOTE:
 				if DEBUG == False:
@@ -89,20 +111,20 @@ while running:
 				elif DEBUG == True:
 					DEBUG = False
 					print "Debug Mode Disabled."
-		
-			#Adjust Music Volume	
+
+			#Adjust Music Volume
 			elif event.key == K_PAGEUP:
 				volumeChange(0.2)
 			elif event.key == K_PAGEDOWN:
 				volumeChange(-0.2)
-				
+
 			#SAVE PLATFORMS
 			elif event.key == K_1:
 				saved_platforms = []
 				for p in platforms:
 					saved_platforms.append(p.rect.midbottom)#cannot pickle Surface objects; must take list of positions
 				saveLevel(saved_platforms,raw_input("What level name to save as? "))
-		
+
 			#LOAD PLATFORMS
 			elif event.key == K_2:
 				del platforms
@@ -111,28 +133,31 @@ while running:
 				for pos in platform_pos:
 					newp = Platform(pos)
 					platforms.add(newp)
-		
+
 		#QUIT
 		elif event.type == QUIT:
 			pygame.quit()
 			sys.exit()
-	
+
 		elif event.type == MOUSEBUTTONDOWN:
 			newp = Platform(camera.mod2(event.pos))
 			platforms.add(newp)
-	
+
 	for player in players.sprites():
 		actions = player.update(players.sprites(), platforms.sprites())
 		if isinstance(actions, int):
-			players.add(Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions))
+			newPlayer = Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions)
+			players.add(newPlayer)
+			camera.mainPlayer = newPlayer
+
 		elif isinstance(actions, dict):
 			if actions['Bullet']:
 				bullets.add(actions['Bullet'])
 			if actions['Grenade']:
 				grenades.add(actions['Grenade'])
-		
+
 	platforms.update(camera)
-	 
+
 	#Draw Background
 	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
 
@@ -144,7 +169,7 @@ while running:
 	for p in platforms.sprites():
 		if p.on_screen:
 			screen.blit(p.image,camera.mod(p.rect))
-		
+
 	#Draw and Update Bullets
 	for b in bullets:
 		b.update(platforms,players)
@@ -156,43 +181,27 @@ while running:
 		screen.blit(g.image, camera.mod(g.rect))
 
 	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
-	for sprite in collidableSprites:
-		collisionGrid = updateGrid(sprite, collisionGrid)
-	checkForCollisions(collisionGrid)
-	
-	for row in collisionGrid:
-		for square in row:
-			square.draw(screen, camera)
+	###for sprite in collidableSprites:
+		###collisionGrid = updateGrid(sprite, collisionGrid)
+	###checkForCollisions(collisionGrid)
 
-		
+	###for row in collisionGrid:
+		###for square in row:
+			###square.draw(screen, camera)
+
+
 	#Update Camera
 	camera.update()
 
 	screen.blit(scoreText, (0,0))
 	screen.blit(highscoreText, (width/2 - highscoreText.get_width()/2, 0))
+
+	screen.blit(HUD, (0,height-HUDSIZE))
 	pygame.display.update()
 
 	cycles += 1
-	
+
 	print clock.get_fps()
-
-#Version History
-
-	#1.0 - Bullets
-	
-	#1.1 - Damage and Health
-	
-	#1.2 - Bullets face proper direction and have sound
-
-	#1.3 - Added grenades
-	
-	#1.4 - Grenades bounce (but not enough)
-	
-	#1.5 - Grenades have friction
-	
-	#1.6 - Grenade and player collisions fixed
-	
-	#2.0 - Marios respawn properly, fixed multiple bullet damage bug, bullet no longer hits the shooter automatically, grenades explode and do damage, fixed bullet collision bug, grenade speed influenced by movement speed, fixed grenades right and left collisions, fixed mario infinite jumping bug, grenade cooking enabled
 
 #BUGS:
 
@@ -205,21 +214,21 @@ while running:
 	#Camera scrolling
 	#Damage and health system
 	#HUD
-	
+
 #OPTIMIZATIONS:
-	
+
 	#Make grenades not bounce up and down when velocity is 0
 	#Make grenade explosions only do damage once, but at any point in time
-	
+
 #Attributions:
-	
+
 	#Sounds
-		#Laser Sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/ 
+		#Laser Sound - http://www.freesound.org/people/THE_bizniss/sounds/39459/
 			#- THE_bizniss CC Sample+ 1.0
-		#Hurt Sound - http://www.freesound.org/people/thecheeseman/sounds/44429/ 
+		#Hurt Sound - http://www.freesound.org/people/thecheeseman/sounds/44429/
 			#- thecheeseman CC Attribution 3.0
 		#Explosion Sound - PD, Media College
-		
+
 	#Images
 
 	#Code

@@ -2,7 +2,7 @@
 from Constants import *
 
 #Running Options
-COLLISSION_DETECTION_MODE = 1 #0 for n^2 object-to-object checks, 1 for grid-zone based checks, 2 for priority checklist
+COLLISION_DETECTION_MODE = 1 #0 for n^2 object-to-object checks, 1 for grid-zone based checks, 2 for priority checklist
 PRINT_HITS = False #Will print 'HIT' each time objects collide\
 
 #IMPORTS
@@ -117,7 +117,7 @@ def updateGrid(sprite,currGrid):
 		for j in range(zone_top, zone_height):
 			currGrid[i][j].objectsContained.append(sprite)
 			sprite.squaresImIn.append(currGrid[i][j])
-			if COLLISSION_DETECTION_MODE == 2: #Add myself to the priority checklist to be checked
+			if COLLISION_DETECTION_MODE == 2: #Add myself to the priority checklist to be checked
 				priorityCheckList.append(currGrid[i][j])
 	
 	return currGrid
@@ -143,3 +143,4 @@ def checkForCollisions(currGrid):
 						print 'CHECKING:',b
 						if pygame.sprite.collide_mask(b, bb) and b != bb:
 							print "HIT"
+	
