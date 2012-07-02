@@ -140,7 +140,9 @@ def checkForCollisions(currGrid):
 				for b in square.objectsContained:
 					print 'CHECKING:',b
 					for bb in square.objectsContained:
+	#***square.objectsContained does not contain all objects because collisions are not occurring***#
 						print 'CHECKING:',b
-						if pygame.sprite.collide_mask(b, bb) and b != bb:
+						if pygame.sprite.collide_rect(b, bb) and b != bb:
 							print "HIT"
+							return b.onCollision(bb)
 	

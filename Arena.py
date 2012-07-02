@@ -21,7 +21,7 @@ from Controller import *
 from Helpers import *
 from Camera import *
 from HUD import *
-###from Collision import *
+from Collision import *
 from Menu import *
 screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
@@ -72,7 +72,7 @@ platforms.add(mp5)
 
 
 #Initialize collision grid
-###collisionGrid = createGrid(GRID_SQUARE_LENGTH)
+collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
 def menu():
 	startButton = StartGame((width/2-100,height/2))
@@ -181,13 +181,13 @@ while running:
 		screen.blit(g.image, camera.mod(g.rect))
 
 	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
-	###for sprite in collidableSprites:
-		###collisionGrid = updateGrid(sprite, collisionGrid)
-	###checkForCollisions(collisionGrid)
+	for sprite in collidableSprites:
+		collisionGrid = updateGrid(sprite, collisionGrid)
+	checkForCollisions(collisionGrid)
 
-	###for row in collisionGrid:
-		###for square in row:
-			###square.draw(screen, camera)
+	for row in collisionGrid:
+		for square in row:
+			square.draw(screen, camera)
 
 
 	#Update Camera
@@ -201,7 +201,8 @@ while running:
 
 	cycles += 1
 
-	print clock.get_fps()
+	if DEBUG:
+		print clock.get_fps()
 
 #BUGS:
 
@@ -212,8 +213,6 @@ while running:
 	#One melee and one range ability
 	#Different classes
 	#Camera scrolling
-	#Damage and health system
-	#HUD
 
 #OPTIMIZATIONS:
 

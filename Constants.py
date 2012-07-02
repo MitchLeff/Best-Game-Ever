@@ -16,8 +16,9 @@ BULLET_SPEED = 10
 BULLET_DAMAGE = 10.0
 GRENADE_DAMAGE = 80.0
 GRENADE_VELOCITY = 10.0
+GLOBAL_MAX_SPEED = 100
 DEBUG = False
-GRID_SQUARE_LENGTH = 40 #Default grid square width to be used
+GRID_SQUARE_LENGTH = GLOBAL_MAX_SPEED #Default grid square width to be used
 DRAW_SQUARES = True
 
 #Make Clock
@@ -74,7 +75,7 @@ MENU_BACKGROUND = pygame.image.load("images/menu_background.png").convert_alpha(
 
 width  = 1000#max(200,background_image.get_width())
 height = 600#max(300,background_image.get_height())
-HUDSIZE = 200
+HUDSIZE = 100
 size   = [width, height]
 screen = pygame.display.set_mode(size)
 background = pygame.Surface((width,height))

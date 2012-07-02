@@ -1,11 +1,14 @@
 from Helpers import *
+from Collision import *
 from Constants import *
 from Projectiles import *
 from HUD import *
 import pygame, random, sys, glob, pickle
 
 init()
+#All sprites must now have an onCollision(Sprite collidingWith) method that defines how each sprite type reacts to a collision with a different type of object#
 
+#Furthermore, all sprites need a self.spriteType variable defining what type of sprite unless Python has a built-in instanceOf function#
 class Bill(pygame.sprite.Sprite):
 	global width, height
 	def __init__(self, *groups):
@@ -74,6 +77,7 @@ class Player(pygame.sprite.Sprite):
 		self.controller = controller
 		self.player_number = number
 		self.playerNum = 1
+		self.type = "player"
 		
 		self.sprite_options = spritesheet
 		self.image = self.sprite_options[0]
@@ -179,23 +183,16 @@ class Player(pygame.sprite.Sprite):
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				if self.collisioncheck(platforms):
-					break 
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				if self.collisioncheck(platforms):
-					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				if self.collisioncheck(platforms):
-					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				if self.collisioncheck(platforms):
-					break
+					
 		#Set Image
 		if self.x_vel == 0:
 			self.image = self.sprite_options[0]
@@ -206,6 +203,19 @@ class Player(pygame.sprite.Sprite):
 		#Check to flip for going left
 		if self.xdirection == -1:
 			self.image = pygame.transform.flip(self.image, True, False)
+		
+		#Check if out of bounds
+		if self.rect.bottom >= levelHeight:
+			self.rect.bottom = levelHeight
+			self.resetJumps()
+		if self.rect.left < 0:
+			self.rect.left = 0
+			self.x_vel = 0
+			self.x_acceleration = 0
+		elif self.rect.right >= levelWidth:
+			self.rect.right = levelWidth
+			self.x_vel = 0
+			self.x_acceleration = 0
 		
 		#Perform other actions
 		actions = {'Bullet':None, 'Grenade':None}
@@ -231,67 +241,52 @@ class Player(pygame.sprite.Sprite):
 		
 		return actions
 		
-	def collisioncheck(self, platforms):
-		self.collided = False
-		if self.rect.bottom >= levelHeight:
-			self.rect.bottom = levelHeight
-			self.resetJumps()
-		if self.rect.left < 0:
-			self.rect.left = 0
-			self.x_vel = 0
-			self.x_acceleration = 0
-		elif self.rect.right >= levelWidth:
-			self.rect.right = levelWidth
-			self.x_vel = 0
-			self.x_acceleration = 0
+	def onCollision(self, collidingWith):
+		"""This method is triggered when a collision is detected. Its parameters are the two objects colliding, and this method determines what happens to the player based on the collision type"""
+		if collidingWith.type == "platform":
+			if self.rect.left <= collidingWith.rect.right and self.rect.right >= collidingWith.rect.left:
+				
+				#Top collision
+				if self.rect.bottom <= collidingWith.rect.top+collidingWith.rect.height/2 and\
+				self.rect.bottom >= collidingWith.rect.top:
+					if DEBUG:
+						print "Collide top"
+					self.y_vel = 0
+					self.rect.bottom = collidingWith.rect.top
+					self.collided = True
+					self.resetJumps()
+					
+				#Bottom collision
+				elif self.rect.top >= collidingWith.rect.bottom-collidingWith.rect.height/2 and\
+				self.rect.top <= collidingWith.rect.bottom:
+					if DEBUG:
+						print "Collide bottom"
+					self.y_vel = 0
+					self.rect.top = collidingWith.rect.bottom - 1
+					self.collided = True
 			
-		#PLATFORM COLLISIONS
-		"""for p in platforms:
-			if p.on_screen:
-				if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
-					if pygame.sprite.collide_mask(p, self):
-							if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
-								
-								#Top collision
-								if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
-								self.rect.bottom >= p.rect.top:
-									if DEBUG:
-										print "Collide top"
-									self.y_vel = 0
-									self.rect.bottom = p.rect.top
-									self.collided = True
-									self.resetJumps()
-									
-								#Bottom collision
-								elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
-								self.rect.top <= p.rect.bottom:
-									if DEBUG:
-										print "Collide bottom"
-									self.y_vel = 0
-									self.rect.top = p.rect.bottom - 1
-									self.collided = True
-							
-							if self.rect.bottom >= p.rect.top+stair_tolerance and\
-							self.rect.top <= p.rect.bottom:
-								
-								#Right Collision
-								if self.rect.left <= p.rect.right and\
-								self.rect.left >= p.rect.right-10:
-									if DEBUG:
-										print "Collide right"
-									self.x_vel = 0
-									self.rect.left = p.rect.right+1
-									self.collided = True
-								
-								#Left Collision
-								elif self.rect.right >= p.rect.left and\
-								self.rect.right <= p.rect.left+10:
-									if DEBUG:
-										print "Collide left"
-									self.x_vel = 0
-									self.rect.right = p.rect.left-1
-									self.collided = True
-		return self.collided"""
+			if self.rect.bottom >= collidingWith.rect.top+stair_tolerance and\
+			self.rect.top <= collidingWith.rect.bottom:
+				
+				#Right Collision
+				if self.rect.left <= collidingWith.rect.right and\
+				self.rect.left >= collidingWith.rect.right-10:
+					if DEBUG:
+						print "Collide right"
+					self.x_vel = 0
+					self.rect.left = collidingWith.rect.right+1
+					self.collided = True
+				
+				#Left Collision
+				elif self.rect.right >= collidingWith.rect.left and\
+				self.rect.right <= collidingWith.rect.left+10:
+					if DEBUG:
+						print "Collide left"
+					self.x_vel = 0
+					self.rect.right = collidingWith.rect.left-1
+					self.collided = True
+		print "COLLISION DETECTED!"
+		return True
 		
 	def shoot(self,players,dmg,speed):
 		if self.xdirection>0:#facing right
@@ -338,6 +333,7 @@ class Platform(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = pos
 		self.on_screen = True	
+		self.type = "platform"
 		
 		#Collision Detection
 		self.squaresImIn = []
@@ -359,6 +355,7 @@ class MovingPlatform(Platform):
 		self.rect = self.image.get_rect()
 		self.rect.midbottom = positionList[0]
 		self.on_screen = True	
+		self.type = "platform"
 		
 		self.positionList = positionList
 		self.speedList = speedList
