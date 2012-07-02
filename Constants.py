@@ -43,7 +43,8 @@ combo3 = pygame.mixer.Sound("sounds/godlike.wav")
 combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
 
 #LOAD IMAGES
-background_image = (pygame.image.load("images/Level0.jpg").convert_alpha())
+#background_image = (pygame.image.load("images/Level0.jpg").convert_alpha())
+background_image = (pygame.image.load("images/level1.png").convert_alpha())
 
 sniper = (pygame.image.load("images/sniper.png").convert_alpha())
 engineer = (pygame.image.load("images/engineer.png").convert_alpha())
