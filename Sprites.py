@@ -81,6 +81,8 @@ class Player(pygame.sprite.Sprite):
 		self.sprite_options = spritesheet
 		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
+		#Make inside rectangle for collisions --> should subtract gunsize from width and a little from the left as well, currently hardcoded, need a better method
+		self.rect = pygame.Rect(self.rect.left+5,self.rect.top,self.rect.width-30,self.rect.height)
 		self.rect.midbottom = [width/2, height]
 		
 		self.max_speed_x = MAX_SPEED_X
@@ -127,7 +129,7 @@ class Player(pygame.sprite.Sprite):
 		self.jumped = False
 		self.jumps_left = 2
 	
-	def update(self, players, platforms):
+	def update(self, players, currGrid):
 		#Joystick compatible
 		
 		#Get the state of the controller to determine how to update
@@ -178,30 +180,29 @@ class Player(pygame.sprite.Sprite):
 		elif self.y_vel <= -1*self.max_speed_y:
 			self.y_vel = -1*self.max_speed_y
 		
-		#Update position
+		#Update position one pixel at a time, checking for collisions each pixel to prevent noclip
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
+				if checkForCollisions(currGrid,self):
+					break
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
+				if checkForCollisions(currGrid,self):
+					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
+				if checkForCollisions(currGrid,self):
+					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
+				if checkForCollisions(currGrid,self):
+					break
 					
-		#Set Image
-		if self.x_vel == 0:
-			self.image = self.sprite_options[0]
-			self.step = 0
-		else:
-			self.image = self.moving_sprites[int(self.step) % len(self.moving_sprites)]
-			self.step += 1.0/self.image_tempo
-		#Check to flip for going left
-		if self.xdirection == -1:
-			self.image = pygame.transform.flip(self.image, True, False)
+		self.setImage()
 		
 		#Check if out of bounds
 		if self.rect.bottom >= levelHeight:
@@ -240,6 +241,20 @@ class Player(pygame.sprite.Sprite):
 		
 		return actions
 		
+	def setImage(self):
+		#Set Image
+		if self.x_vel == 0:
+			self.image = self.sprite_options[0]
+			self.step = 0
+		else:
+			self.image = self.moving_sprites[int(self.step) % len(self.moving_sprites)]
+			self.step += 1.0/self.image_tempo
+		#Check to flip for going left
+		if self.xdirection == -1:
+			self.image = pygame.transform.flip(self.image, True, False)
+			#reverse collision rectangle for reversed image
+
+	
 	def onCollision(self, collidingWith):
 		"""This method is triggered when a collision is detected. Its parameters are the two objects colliding, and this method determines what happens to the player based on the collision type"""
 		if collidingWith.type == "platform":
@@ -250,7 +265,13 @@ class Player(pygame.sprite.Sprite):
 				self.rect.bottom >= collidingWith.rect.top:
 					if DEBUG:
 						print "Collide top"
-					self.y_vel = 0
+					#If platform is a moving platform, move player with platform
+					#however, platform does not collide every frame that you are on it. Therefore, speed is only half what it should be
+					try:#if colliding with a moving platform, player should move without loops because the loops mess with the proper speed
+						self.y_vel = collidingWith.speedList[1]*collidingWith.directionList[1]
+						self.x_acceleration = collidingWith.speedList[0]*collidingWith.directionList[0]
+					except:#if platform is not moving
+						self.y_vel = 0
 					self.rect.bottom = collidingWith.rect.top
 					self.collided = True
 					self.resetJumps()
@@ -261,7 +282,7 @@ class Player(pygame.sprite.Sprite):
 					if DEBUG:
 						print "Collide bottom"
 					self.y_vel = 0
-					self.rect.top = collidingWith.rect.bottom - 1
+					self.rect.top = collidingWith.rect.bottom + 1
 					self.collided = True
 			
 			if self.rect.bottom >= collidingWith.rect.top+stair_tolerance and\
@@ -430,31 +451,32 @@ class Bullet(pygame.sprite.Sprite):
 		
 		#Collision Detection
 		self.squaresImIn = []
+	
 	def update(self, platforms, players):
 
 		self.x_vel += self.x_accell
 		self.y_vel += self.y_accell
 		
-		#Update position
+		#Update position, checking for collisions each pixel
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-#				if self.collisioncheck(platforms,players):
-#					break 
+#				if checkForCollisions(currGrid,self):
+#					break
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-#				if self.collisioncheck(platforms,players):
+#				if checkForCollisions(currGrid,self):
 #					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-#				if self.collisioncheck(platforms,players):
+#				if checkForCollisions(currGrid,self):
 #					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-#				if self.collisioncheck(platforms,players):
+#				if checkForCollisions(currGrid,self):
 #					break
 		if self.collided or self.rect.left > levelWidth or self.rect.right < 0:
 			self.kill()

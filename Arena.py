@@ -7,18 +7,13 @@
 #Version = '2.0'
 
 #IMPORTS
-import pygame, random, sys, glob, pickle, sprite_sheet_loader
+import pygame, random, sys, pickle, sprite_sheet_loader
 from pygame.locals import *
-from glob import glob#glob allows use of wildcard for reading filenames
 
-from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
-#from Platforms import *
-from Projectiles import *
 from Sprites import *
 from Controller import *
-from Helpers import *
 from Camera import *
 from HUD import *
 from Collision import *
@@ -144,7 +139,7 @@ while running:
 			platforms.add(newp)
 
 	for player in players.sprites():
-		actions = player.update(players.sprites(), platforms.sprites())
+		actions = player.update(players.sprites(), collisionGrid)
 		if isinstance(actions, int):
 			newPlayer = Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions)
 			players.add(newPlayer)
