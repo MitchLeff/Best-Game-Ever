@@ -11,15 +11,27 @@ def init():
 def br(lines=1):
 	for i in range(0,lines):
 		print ""
-	
-def volumeChange(change):
-	currentVol = pygame.mixer.music.get_volume()
+
+#takes only one channel as argument
+def volumeChange(channel,change):
+	currentVol = channel.get_volume()
 	currentVol += change
 	if currentVol > 1.0:
 		currentVol = 1.0
 	elif currentVol < 0.0:
 		currentVol = 0.0
-	pygame.mixer.music.set_volume(currentVol)
+	channel.set_volume(currentVol)
+	
+#takes a list of channels as argument
+def volumeChangeAll(channels,change):
+	for channel in channels:
+		currentVol = channel.get_volume()
+		currentVol += change
+		if currentVol > 1.0:
+			currentVol = 1.0
+		elif currentVol < 0.0:
+			currentVol = 0.0
+		channel.set_volume(currentVol)
 
 def saveLevel(currentmap, mapname):
 	map = open(string.replace("maps/"+mapname+".map","\r",""),'w') #write only means we can create new files

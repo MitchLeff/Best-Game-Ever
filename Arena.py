@@ -22,7 +22,7 @@ screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
 highscore = 0
 score = 0
-running = True
+running = False
 cycles = 0
 
 scoreFont = pygame.font.SysFont('ocraextended', 26)
@@ -69,25 +69,92 @@ platforms.add(mp5)
 #Initialize collision grid
 collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
-def menu():
-	startButton = StartGame((width/2-100,height/2))
-	buttons = [startButton]
+def controlsMenu():
+	
+	whichPlayer = 1
+	jump = Button("Jump",(width/2-100,100))
+	moveLeft = Button("Move Left")
+	moveRight = Button("Move Right")
+	fire = Button("Fire Gun")
+	grenade = Button("Throw Grenade")
+	action1 = Button("Action 1")
+	action2 = Button("Action 2")
+	action3 = Button("Action 3")
+	action4 = Button("Action 4")
+	backButton = Button("Back",(width/2-100,350))
+	buttons = [jump,moveLeft,moveRight,fire,grenade,action1,action2,action3,action4,backButton]
+	controlsMenu = Menu(buttons,(width/2-200,150),2)
+	MENU = True
+	while MENU:
+		for event in pygame.event.get():
+			if event.type == MOUSEBUTTONDOWN:
+				if backButton.clicked(event.pos):
+					return optionsMenu()
+			elif event.type==QUIT:
+				pygame.quit()
+				sys.exit()
+		controlsMenu.update()
+		pygame.display.update()
+
+def optionsMenu():
+	volumeUp = Button("Volume Up",(width/2-200,height/2))
+	volumeDown = Button("Volume Down",(width/2,height/2))
+	backButton = Button("Back")
+	quitButton = Button("Quit")
+	controlsButton = Button("Controls")
+	buttons = [volumeUp,volumeDown,controlsButton,backButton]
+	optionsMenu = Menu(buttons,(width/2-100,height/2+50))
+	MENU = True
+	while MENU:
+		for event in pygame.event.get():
+			if (event.type==MOUSEBUTTONDOWN):
+				if backButton.clicked(event.pos):
+					return mainMenu()
+				elif quitButton.clicked(event.pos):
+					pygame.quit()
+					sys.exit()
+				elif volumeUp.clicked(event.pos):
+					volumeChangeAll(soundChannels,0.2)
+				elif volumeDown.clicked(event.pos):
+					volumeChangeAll(soundChannels,-0.2)
+				elif controlsButton.clicked(event.pos):
+					return controlsMenu()
+			elif (event.type==QUIT):
+				pygame.quit()
+				sys.exit()
+		optionsMenu.update()
+		pygame.display.update()
+
+def mainMenu():
+	if running:
+		startText = "Resume Game"
+	else:
+		startText = "Start Game!"
+	startButton = Button(startText)
+	optionsButton = Button("Options")
+	quitButton = Button("Quit")
+	buttons = [startButton,optionsButton,quitButton]
 	mainMenu = Menu(buttons)
 	MENU = True
 	while MENU:
 		for event in pygame.event.get():
 			if (event.type==MOUSEBUTTONDOWN):
-				for button in mainMenu.buttons:
-					if button.clicked(event.pos):
-						return#each button must return True so that a new loop can start
+				if startButton.clicked(event.pos):
+					return
+				elif optionsButton.clicked(event.pos):
+					return optionsMenu()
+				elif quitButton.clicked(event.pos):
+					pygame.quit()
+					sys.exit()
 			elif (event.type==QUIT):
 				pygame.quit()
 				sys.exit()
 		mainMenu.update()
 		pygame.display.update()
 
-menu()
+mainMenu()
 
+running = True
 currentPlayer = 0
 while running:
 	clock.tick(FPS)
@@ -96,7 +163,7 @@ while running:
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
 			if event.key == K_ESCAPE:
-				running = False
+				mainMenu()
 
 			#Toggle debug mode
 			elif event.key == K_BACKQUOTE:
@@ -109,9 +176,9 @@ while running:
 
 			#Adjust Music Volume
 			elif event.key == K_PAGEUP:
-				volumeChange(0.2)
+				volumeChange(pygame.mixer.music,0.2)
 			elif event.key == K_PAGEDOWN:
-				volumeChange(-0.2)
+				volumeChange(pygame.mixer.music,-0.2)
 
 			#SAVE PLATFORMS
 			elif event.key == K_1:
@@ -207,7 +274,7 @@ while running:
 
 	#One melee and one range ability
 	#Different classes
-	#Camera scrolling
+	#Music changer
 
 #OPTIMIZATIONS:
 

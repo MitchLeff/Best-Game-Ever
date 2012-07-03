@@ -29,6 +29,9 @@ sfx = pygame.mixer.Channel(0)
 announcer = pygame.mixer.Channel(1)
 guns = pygame.mixer.Channel(2)
 
+#List of sound channels
+soundChannels = [sfx,announcer,guns,pygame.mixer.music]
+
 die_sound = pygame.mixer.Sound("sounds/die.wav")
 jump_sound = pygame.mixer.Sound("sounds/jump.wav")
 stomp_sound = pygame.mixer.Sound("sounds/stomp.wav")
