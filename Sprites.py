@@ -258,7 +258,7 @@ class Player(pygame.sprite.Sprite):
 		elif self.xdirection<0:#facing left
 			direction = self.rect.left-self.max_speed_x-10
 			bullet_dir = -1
-		shot = Bullet(players,bullet_dir,(direction,self.rect.top+20),dmg,speed)
+		shot = Bullet(players,bullet_dir,(direction,self.rect.top+11),dmg,speed)
 		return shot
 		
 	def throw(self,players):
