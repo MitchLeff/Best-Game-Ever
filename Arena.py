@@ -30,7 +30,9 @@ scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
-pygame.mixer.music.load("sounds/Crystal Mix %.mp3")
+MUSIC = glob.glob("sounds/music/*")
+currentMusic = 0
+pygame.mixer.music.load(MUSIC[currentMusic])
 pygame.mixer.music.play(-1)#infinite loop
 pygame.mixer.music.set_volume(1.0)
 
@@ -97,22 +99,41 @@ def controlsMenu():
 		pygame.display.update()
 
 def optionsMenu():
+	global currentMusic
 	volumeUp = Button("Volume Up",(width/2-200,height/2))
 	volumeDown = Button("Volume Down",(width/2,height/2))
+	changeMusic = Button("Change Music")
 	backButton = Button("Back")
-	quitButton = Button("Quit")
 	controlsButton = Button("Controls")
-	buttons = [volumeUp,volumeDown,controlsButton,backButton]
+	buttons = [volumeUp,volumeDown,changeMusic,controlsButton,backButton]
 	optionsMenu = Menu(buttons,(width/2-100,height/2+50))
+	
+	#Whatever track is playing at start, display its name
+	currentTrack = MUSIC[currentMusic][13:-4]#-index for string means backtracking from end
+	musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
+	screen.blit(musicText,(width/2-100,height/2-100))
+	
 	MENU = True
 	while MENU:
 		for event in pygame.event.get():
 			if (event.type==MOUSEBUTTONDOWN):
 				if backButton.clicked(event.pos):
 					return mainMenu()
-				elif quitButton.clicked(event.pos):
-					pygame.quit()
-					sys.exit()
+				elif changeMusic.clicked(event.pos):
+					#Go to next track or restart at 0
+					currentMusic += 1
+					if currentMusic == len(MUSIC):
+						currentMusic = 0
+					currentVol = pygame.mixer.music.get_volume()
+					pygame.mixer.music.load(MUSIC[currentMusic])
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(currentVol)
+					#Reformat track text to exclude folder names and .ogg
+					currentTrack = MUSIC[currentMusic][13:-4]#-index for string means backtracking from end
+					musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
+					screen.blit(optionsMenu.background,(0,0))
+					screen.blit(musicText,(width/2-100,height/2-100))
+					
 				elif volumeUp.clicked(event.pos):
 					volumeChangeAll(soundChannels,0.2)
 				elif volumeDown.clicked(event.pos):
@@ -274,7 +295,6 @@ while running:
 
 	#One melee and one range ability
 	#Different classes
-	#Music changer
 
 #OPTIMIZATIONS:
 

@@ -49,17 +49,17 @@ combo4 = pygame.mixer.Sound("sounds/holyshit.wav")
 #background_image = (pygame.image.load("images/Level0.jpg").convert_alpha())
 background_image = (pygame.image.load("images/level1.png").convert_alpha())
 
-sniper = (pygame.image.load("images/sniper.png").convert_alpha())
+spy = (pygame.image.load("images/spy.png").convert_alpha())
 engineer = (pygame.image.load("images/engineer.png").convert_alpha())
 soldier = (pygame.image.load("images/soldier.png").convert_alpha())
 medic = (pygame.image.load("images/medic.png").convert_alpha())
 
-SNIPER_SPRITE_LIST = [sniper]
+SPY_SPRITE_LIST = [spy]
 ENGINEER_SPRITE_LIST = [engineer]
 SOLDIER_SPRITE_LIST = [soldier]
 MEDIC_SPRITE_LIST = [medic]
 
-PLAYER_SPRITE_OPTIONS = [SNIPER_SPRITE_LIST, ENGINEER_SPRITE_LIST, SOLDIER_SPRITE_LIST, MEDIC_SPRITE_LIST]
+PLAYER_SPRITE_OPTIONS = [SPY_SPRITE_LIST, ENGINEER_SPRITE_LIST, SOLDIER_SPRITE_LIST, MEDIC_SPRITE_LIST]
 
 #WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())
@@ -69,7 +69,6 @@ grenade_img = (pygame.image.load("images/grenade.png").convert_alpha())
 explosion_sprites = sprite_sheet((64,64),"images/explosion_sprites.png")
 GRENADE_SPRITE_OPTIONS = [grenade_img,explosion_sprites]
 
-bill_image = pygame.image.load("images/bill.png").convert_alpha()
 platform_img = pygame.image.load("images/platform.png").convert_alpha()
 
 #MENU IMAGES
@@ -94,6 +93,7 @@ running = True
 cycles = 0
 death_timer = 0
 
+smallFont = pygame.font.SysFont('ocraextended', 20)
 scoreFont = pygame.font.SysFont('ocraextended', 26)
 scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))

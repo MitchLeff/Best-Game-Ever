@@ -7,69 +7,12 @@ import pygame, random, sys, glob, pickle
 init()
 #All sprites must now have an onCollision(Sprite collidingWith) method that defines how each sprite type reacts to a collision with a different type of object#
 
-#Furthermore, all sprites need a self.spriteType variable defining what type of sprite unless Python has a built-in instanceOf function#
-class Bill(pygame.sprite.Sprite):
-	global width, height
-	def __init__(self, *groups):
-		directions = [-1, 1]
-		pygame.sprite.Sprite.__init__(self)
-
-		size = random.random()
-
-		if size < .025:
-			self.image = megaBill_image
-		elif size < .1:
-			self.image = bigBill_image
-		else:
-			self.image = bill_image
-		self.rect = self.image.get_rect()
-
-		self.direction = random.choice(directions)
-		self.y_dir = 0
-		self.y_vel = 0
-
-		hh = random.random()
-
-		if hh < .30:
-			h = random.randint((height-1*height/6), (height))
-		elif hh < .55:
-			h = random.randint((height-2*height/6), (height-1*height/6))
-		elif hh < .75:
-			h = random.randint((height-3*height/6), (height-2*height/6))
-		elif hh <= .90:
-			h = random.randint((height-4*height/6), (height-3*height/6))
-		else:
-			h = random.randint((height-5*height/6), (height-4*height/6))
-
-		if h + self.rect.height > height:
-			h = height - self.rect.height
-
-		if self.direction == 1:
-			self.rect.midright = [0, h]
-		elif self.direction == -1:
-			self.rect.midleft = [width, h]
-			self.image = pygame.transform.flip(self.image, True, False)
-		self.speed = random.randint(MIN_SPEED,MAX_SPEED)
-
-		for g in groups:
-			g.add(self)
-
-		self.mode = "fire"
-		
-		#Collision Detection
-		self.squaresImIn = []
-
-	def update(self):
-		if self.mode == 'fire':
-			self.rect.right += self.speed*self.direction
-		elif self.mode == 'die':
-			self.y_vel += GRAVITY
-			self.rect.top += self.y_vel
-		if self.rect.right < -10 or self.rect.left > width+10 or self.rect.top > height + 10:
-			self.kill()
+#Furthermore, all sprites need a self.type variable defining what type of sprite unless Python has a built-in instanceOf function#
+			
+class Enemy(pygame.sprite.Sprite):
+	pass
 
 class Player(pygame.sprite.Sprite):
-	global width, height
 	def __init__(self, spritesheet, controller, number):
 		pygame.sprite.Sprite.__init__(self)
 		
