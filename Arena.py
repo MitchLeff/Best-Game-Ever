@@ -31,7 +31,7 @@ highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
 MUSIC = glob.glob("sounds/music/*")
-currentMusic = 0
+currentMusic = 1
 pygame.mixer.music.load(MUSIC[currentMusic])
 pygame.mixer.music.play(-1)#infinite loop
 pygame.mixer.music.set_volume(1.0)

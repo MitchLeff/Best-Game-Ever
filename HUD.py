@@ -13,6 +13,10 @@ class HealthBar():
 		
 	def update(self):
 		self.rect.bottomleft = self.position,32
+		#Draw red bar
+		pygame.draw.rect(HUD, (140,20,10), \
+		(self.owner.health, self.rect.bottom+10, 100-self.owner.health, self.height))
+		#Draw green bar
 		pygame.draw.rect(HUD, (80,255,60), \
 		(self.rect.left, self.rect.bottom+10, self.owner.health, self.height))
 		HUD.blit(self.text, self.rect)
