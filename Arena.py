@@ -7,18 +7,13 @@
 #Version = '2.0'
 
 #IMPORTS
-import pygame, random, sys, glob, pickle, sprite_sheet_loader
+import pygame, random, sys, pickle, sprite_sheet_loader
 from pygame.locals import *
-from glob import glob#glob allows use of wildcard for reading filenames
 
-from sprite_sheet_loader import *
 from Constants import *
 from ObjectLists import *
-#from Platforms import *
-from Projectiles import *
 from Sprites import *
 from Controller import *
-from Helpers import *
 from Camera import *
 from HUD import *
 from Collision import *
@@ -27,7 +22,7 @@ screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
 highscore = 0
 score = 0
-running = True
+running = False
 cycles = 0
 
 scoreFont = pygame.font.SysFont('ocraextended', 26)
@@ -35,7 +30,9 @@ scoreText = scoreFont.render("Score: %s" % score, True, (0,0,255))
 highscoreText = scoreFont.render("High Score: %s" % highscore, True, (0,0,255))
 
 #START MUSICS
-pygame.mixer.music.load("sounds/Crystal Mix %.mp3")
+MUSIC = glob.glob("sounds/music/*")
+currentMusic = 0
+pygame.mixer.music.load(MUSIC[currentMusic])
 pygame.mixer.music.play(-1)#infinite loop
 pygame.mixer.music.set_volume(1.0)
 
@@ -59,11 +56,11 @@ for i in enumerate(controllers):
 camera = Camera(players.sprites()[0], (width,height-HUDSIZE), background_image.get_size())
 
 #Test Moving Platforms
-mp1 = MovingPlatform( [[100,1000], [300,1000]], [1,0])
+mp1 = MovingPlatform( [[100,400], [300,400]], [1,0])
 mp2 = MovingPlatform( [[500,900], [300,1000]], [2,0])
 mp3 = MovingPlatform( [[500,800], [700,1000]], [4,0])
 mp4 = MovingPlatform( [[900,700], [700,1000]], [8,0])
-mp5 = MovingPlatform( [[100,600], [levelWidth - 100,1000]], [20,0])
+mp5 = MovingPlatform( [[100,300], [levelWidth - 100,300]], [20,0])
 platforms.add(mp1)
 #platforms.add(mp2)
 #platforms.add(mp3)
@@ -72,27 +69,113 @@ platforms.add(mp5)
 
 
 #Initialize collision grid
-###collisionGrid = createGrid(GRID_SQUARE_LENGTH)
+collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
-def menu():
-	startButton = StartGame((width/2-100,height/2))
-	buttons = [startButton]
+def controlsMenu():
+	
+	whichPlayer = 1
+	jump = Button("Jump",(width/2-100,100))
+	moveLeft = Button("Move Left")
+	moveRight = Button("Move Right")
+	fire = Button("Fire Gun")
+	grenade = Button("Throw Grenade")
+	action1 = Button("Action 1")
+	action2 = Button("Action 2")
+	action3 = Button("Action 3")
+	action4 = Button("Action 4")
+	backButton = Button("Back",(width/2-100,350))
+	buttons = [jump,moveLeft,moveRight,fire,grenade,action1,action2,action3,action4,backButton]
+	controlsMenu = Menu(buttons,(width/2-200,150),2)
+	MENU = True
+	while MENU:
+		for event in pygame.event.get():
+			if event.type == MOUSEBUTTONDOWN:
+				if backButton.clicked(event.pos):
+					return optionsMenu()
+			elif event.type==QUIT:
+				pygame.quit()
+				sys.exit()
+		controlsMenu.update()
+		pygame.display.update()
+
+def optionsMenu():
+	global currentMusic
+	volumeUp = Button("Volume Up",(width/2-200,height/2))
+	volumeDown = Button("Volume Down",(width/2,height/2))
+	changeMusic = Button("Change Music")
+	backButton = Button("Back")
+	controlsButton = Button("Controls")
+	buttons = [volumeUp,volumeDown,changeMusic,controlsButton,backButton]
+	optionsMenu = Menu(buttons,(width/2-100,height/2+50))
+	
+	#Whatever track is playing at start, display its name
+	currentTrack = MUSIC[currentMusic][13:-4]#-index for string means backtracking from end
+	musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
+	screen.blit(musicText,(width/2-100,height/2-100))
+	
+	MENU = True
+	while MENU:
+		for event in pygame.event.get():
+			if (event.type==MOUSEBUTTONDOWN):
+				if backButton.clicked(event.pos):
+					return mainMenu()
+				elif changeMusic.clicked(event.pos):
+					#Go to next track or restart at 0
+					currentMusic += 1
+					if currentMusic == len(MUSIC):
+						currentMusic = 0
+					currentVol = pygame.mixer.music.get_volume()
+					pygame.mixer.music.load(MUSIC[currentMusic])
+					pygame.mixer.music.play(-1)
+					pygame.mixer.music.set_volume(currentVol)
+					#Reformat track text to exclude folder names and .ogg
+					currentTrack = MUSIC[currentMusic][13:-4]#-index for string means backtracking from end
+					musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
+					screen.blit(optionsMenu.background,(0,0))
+					screen.blit(musicText,(width/2-100,height/2-100))
+					
+				elif volumeUp.clicked(event.pos):
+					volumeChangeAll(soundChannels,0.2)
+				elif volumeDown.clicked(event.pos):
+					volumeChangeAll(soundChannels,-0.2)
+				elif controlsButton.clicked(event.pos):
+					return controlsMenu()
+			elif (event.type==QUIT):
+				pygame.quit()
+				sys.exit()
+		optionsMenu.update()
+		pygame.display.update()
+
+def mainMenu():
+	if running:
+		startText = "Resume Game"
+	else:
+		startText = "Start Game!"
+	startButton = Button(startText)
+	optionsButton = Button("Options")
+	quitButton = Button("Quit")
+	buttons = [startButton,optionsButton,quitButton]
 	mainMenu = Menu(buttons)
 	MENU = True
 	while MENU:
 		for event in pygame.event.get():
 			if (event.type==MOUSEBUTTONDOWN):
-				for button in mainMenu.buttons:
-					if button.clicked(event.pos):
-						return#each button must return True so that a new loop can start
+				if startButton.clicked(event.pos):
+					return
+				elif optionsButton.clicked(event.pos):
+					return optionsMenu()
+				elif quitButton.clicked(event.pos):
+					pygame.quit()
+					sys.exit()
 			elif (event.type==QUIT):
 				pygame.quit()
 				sys.exit()
 		mainMenu.update()
 		pygame.display.update()
 
-menu()
+mainMenu()
 
+running = True
 currentPlayer = 0
 while running:
 	clock.tick(FPS)
@@ -101,7 +184,7 @@ while running:
 		if event.type == KEYDOWN:
 			pressed = pygame.key.get_pressed()
 			if event.key == K_ESCAPE:
-				running = False
+				mainMenu()
 
 			#Toggle debug mode
 			elif event.key == K_BACKQUOTE:
@@ -114,9 +197,9 @@ while running:
 
 			#Adjust Music Volume
 			elif event.key == K_PAGEUP:
-				volumeChange(0.2)
+				volumeChange(pygame.mixer.music,0.2)
 			elif event.key == K_PAGEDOWN:
-				volumeChange(-0.2)
+				volumeChange(pygame.mixer.music,-0.2)
 
 			#SAVE PLATFORMS
 			elif event.key == K_1:
@@ -144,7 +227,7 @@ while running:
 			platforms.add(newp)
 
 	for player in players.sprites():
-		actions = player.update(players.sprites(), platforms.sprites())
+		actions = player.update(players.sprites(), collisionGrid)
 		if isinstance(actions, int):
 			newPlayer = Player(PLAYER_SPRITE_OPTIONS[actions%4], controllers[actions], actions)
 			players.add(newPlayer)
@@ -181,13 +264,13 @@ while running:
 		screen.blit(g.image, camera.mod(g.rect))
 
 	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
-	###for sprite in collidableSprites:
-		###collisionGrid = updateGrid(sprite, collisionGrid)
-	###checkForCollisions(collisionGrid)
+	for sprite in collidableSprites:
+		collisionGrid = updateGrid(sprite, collisionGrid)
+	checkForCollisions(collisionGrid)
 
-	###for row in collisionGrid:
-		###for square in row:
-			###square.draw(screen, camera)
+	for row in collisionGrid:
+		for square in row:
+			square.draw(screen, camera)
 
 
 	#Update Camera
@@ -201,7 +284,8 @@ while running:
 
 	cycles += 1
 
-	print clock.get_fps()
+	if DEBUG:
+		print clock.get_fps()
 
 #BUGS:
 
@@ -211,9 +295,6 @@ while running:
 
 	#One melee and one range ability
 	#Different classes
-	#Camera scrolling
-	#Damage and health system
-	#HUD
 
 #OPTIMIZATIONS:
 
