@@ -262,7 +262,7 @@ class Player(pygame.sprite.Sprite):
 		elif self.xdirection<0:#facing left
 			direction = self.rect.left-self.max_speed_x-10
 			bullet_dir = -1
-		shot = Bullet(players,bullet_dir,(direction,self.rect.top+11),dmg,speed)
+		shot = Bullet(players,bullet_dir,(direction,self.rect.top+11),dmg,speed,self)
 		return shot
 		
 	def throw(self,players):
@@ -370,7 +370,7 @@ class MovingPlatform(Platform):
 		self.move(self.positionList[self.counter % len(self.positionList)])
 		
 class Bullet(pygame.sprite.Sprite):
-	def __init__(self,players,dir,pos,damage,xvel,sprite=BULLET_SPRITE_OPTIONS):
+	def __init__(self,players,dir,pos,damage,xvel,creator,sprite=BULLET_SPRITE_OPTIONS):
 		#Play creation sound
 		guns.play(shoot)
 		
@@ -385,7 +385,7 @@ class Bullet(pygame.sprite.Sprite):
 			self.rect.right,self.rect.top = pos
 		
 		#MOVEMENT
-		self.x_vel = xvel
+		self.x_vel = xvel + creator.x_vel
 		self.y_vel = 0
 		self.x_accell = 0
 		self.y_accell = 0
