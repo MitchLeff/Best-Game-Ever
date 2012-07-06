@@ -50,9 +50,9 @@ def updateGrid(sprite,currGrid):
 	zone_left = max(0,leftMostColumn)
 	zone_top = max(0,upperMostRow)
 	
-	#Determine how far over and down I go
-	zone_width = min(width/GRID_SQUARE_LENGTH, leftMostColumn+squaresWide)
-	zone_height = min(height/GRID_SQUARE_LENGTH, upperMostRow+squaresTall)
+	#Determine how far over and down I go //width and height not defined
+	zone_width = min(levelWidth/GRID_SQUARE_LENGTH, leftMostColumn+squaresWide)
+	zone_height = min(levelHeight/GRID_SQUARE_LENGTH, upperMostRow+squaresTall)
 	
 	#Determine if I'm OVER THE LINE, MARK IT ZERO
 	if sprite.rect.right >= (leftMostColumn + squaresWide) * GRID_SQUARE_LENGTH:
