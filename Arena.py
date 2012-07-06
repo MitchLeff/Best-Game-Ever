@@ -21,7 +21,7 @@ from Controller import *
 from Helpers import *
 from Camera import *
 from HUD import *
-###from Collision import *
+from Collision import *
 from Menu import *
 screen = pygame.display.set_mode(size)#,pygame.FULLSCREEN)
 
