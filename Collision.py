@@ -82,7 +82,7 @@ def createGrid(squareLength): #This function resets the grid.
 		gridSquares.append(row)
 	return gridSquares
 
-def checkForCollisions(currGrid,sprite=0):
+def checkForCollisions(currGrid,sprite=0,exclusions=[0]):
 	if sprite == 0:
 		for row in currGrid:
 			for square in row:
@@ -90,7 +90,6 @@ def checkForCollisions(currGrid,sprite=0):
 					for b in square.objectsContained:
 						print 'CHECKING:',b
 						for bb in square.objectsContained:
-		#***square.objectsContained does not contain all objects because collisions are not occurring***#
 							print 'CHECKING:',bb
 							if pygame.sprite.collide_rect(b, bb) and b != bb:
 								print "HIT"
@@ -100,8 +99,11 @@ def checkForCollisions(currGrid,sprite=0):
 	else:
 		for square in sprite.squaresImIn:
 			for collidable in square.objectsContained:
-#***square.objectsContained does not contain all objects because collisions are not occurring***#
-				#print 'CHECKING:',b
+				#loop through given exclusions and do not do collisions for those
+				for excluded in exclusions:
+					if collidable == excluded:
+						pass
+				#print 'CHECKING:',b //should be able to add sprite to exclusions array
 				if pygame.sprite.collide_rect(sprite, collidable) and sprite != collidable:
 					print "HIT"
 					return sprite.onCollision(collidable)

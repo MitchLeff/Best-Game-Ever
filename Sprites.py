@@ -55,6 +55,7 @@ class Player(pygame.sprite.Sprite):
 		
 		self.shooting = False
 		self.grenading = False
+		self.grenade = 0
 		
 		self.collided = False
 		self.collisionCheckDist = max(self.rect.height,self.rect.width)
@@ -123,26 +124,27 @@ class Player(pygame.sprite.Sprite):
 		elif self.y_vel <= -1*self.max_speed_y:
 			self.y_vel = -1*self.max_speed_y
 		
+		self.collisionExclusions = [self.grenade]
 		#Update position one pixel at a time, checking for collisions each pixel to prevent noclip
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-				if checkForCollisions(currGrid,self):
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
 					break
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-				if checkForCollisions(currGrid,self):
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
 					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-				if checkForCollisions(currGrid,self):
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
 					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-				if checkForCollisions(currGrid,self):
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
 					break
 					
 		self.setImage()
@@ -248,8 +250,10 @@ class Player(pygame.sprite.Sprite):
 					self.x_vel = 0
 					self.rect.right = collidingWith.rect.left-1
 					self.collided = True
-		print "COLLISION DETECTED!"
-		return True
+			print "COLLISION DETECTED!"
+			return True
+		else:
+			return False
 		
 	def shoot(self,players,dmg,speed):
 		if self.xdirection>0:#facing right
@@ -541,7 +545,7 @@ class Grenade(pygame.sprite.Sprite):
 		#Collision Detection
 		self.squaresImIn = []
 		
-	def update(self,platforms,players):
+	def update(self,platforms,players,currGrid):
 	
 		self.counter += 1
 		if self.counter == self.fuse_length:
@@ -590,23 +594,25 @@ class Grenade(pygame.sprite.Sprite):
 			if (self.x_vel<0):
 				for i in range(abs(int(self.x_vel))):
 					self.rect.left += -1
-#					if self.collisioncheck(platforms,players):
-#						break 
+					if checkForCollisions(currGrid,self):
+						break
 			elif (self.x_vel>0):
 				for i in range(int(self.x_vel)):
 					self.rect.left += 1
-#					if self.collisioncheck(platforms,players):
-#						break
+					if checkForCollisions(currGrid,self):
+						break
 			if (self.y_vel<0):
 				for i in range(abs(int(self.y_vel))):
 					self.rect.top += -1
-#					if self.collisioncheck(platforms,players):
-#						break
+					if checkForCollisions(currGrid,self):
+						break
 			elif (self.y_vel>0):
 				for i in range(int(self.y_vel)):
 					self.rect.top += 1
-#					if self.collisioncheck(platforms,players):
-#						break
+					if checkForCollisions(currGrid,self):
+						break
+
+			self.outOfBounds()
 			
 			#Check to flip for going left
 			if self.xdirection == -1:
@@ -617,7 +623,6 @@ class Grenade(pygame.sprite.Sprite):
 			tempbot = self.rect.midbottom
 			self.image = explosion_sprites[self.explode_img]
 			self.rect = self.image.get_rect()
-			self.collisionCheckDist = max(self.rect.height,self.rect.width)
 			self.rect.midbottom = tempbot
 			self.y_vel = 0
 			self.explode_collision(players)
@@ -626,12 +631,55 @@ class Grenade(pygame.sprite.Sprite):
 			self.kill()
 		
 	def onCollision(self, collidingWith):
-		pass
+		#PLATFORM COLLISION
+		if collidingWith.type=="platform":
+			if self.rect.left <= collidingWith.rect.right and self.rect.right >= collidingWith.rect.left:
+				
+				#Top collision
+				if self.rect.bottom <= collidingWith.rect.top+collidingWith.rect.height/2 and\
+				self.rect.bottom >= collidingWith.rect.top:
+					if DEBUG:
+						print "Collide top"
+					self.rect.bottom = collidingWith.rect.top
+					self.collided = True
+					self.bounce("vert")
+
+				#Bottom collision
+				elif self.rect.top >= collidingWith.rect.bottom-collidingWith.rect.height/2 and\
+				self.rect.top <= collidingWith.rect.bottom:
+					if DEBUG:
+						print "Collide bottom"
+					self.rect.top = collidingWith.rect.bottom
+					self.collided = True
+					self.bounce("vert")
 	
-	def collisioncheck(self,platforms,players):
+			if self.rect.bottom >= collidingWith.rect.top+stair_tolerance and\
+			self.rect.top <= collidingWith.rect.bottom:
+		
+				#Right Collision
+				if self.rect.left <= collidingWith.rect.right and\
+				self.rect.left >= collidingWith.rect.right-10:
+					if DEBUG:
+						print "Collide right"
+					self.rect.left = collidingWith.rect.right+1
+					self.collided = True
+					self.bounce("horiz")
+		
+				#Left Collision
+				elif self.rect.right >= collidingWith.rect.left and\
+				self.rect.right <= collidingWith.rect.left+10:
+					if DEBUG:
+						print "Collide left"
+					self.rect.right = collidingWith.rect.left-1
+					self.collided = True
+					self.bounce("horiz")
+				
+		return self.collided
+	
+	def outOfBounds(self):
 		self.collided = False
-		if self.rect.bottom >= levelHeight-HUDSIZE:
-			self.rect.bottom = levelHeight-HUDSIZE-1
+		if self.rect.bottom >= levelHeight:
+			self.rect.bottom = levelHeight
 			self.bounce("vert")
 			self.collided = True
 			
@@ -644,52 +692,6 @@ class Grenade(pygame.sprite.Sprite):
 			self.rect.right = levelWidth-1
 			self.bounce("horiz")
 			self.collided = True
-			
-		#PLATFORM COLLISIONS
-		for p in platforms:
-			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:#Check this code
-				if pygame.sprite.collide_mask(p, self):
-						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
-							
-							#Top collision
-							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
-							self.rect.bottom >= p.rect.top:
-								if DEBUG:
-									print "Collide top"
-								self.rect.bottom = p.rect.top
-								self.collided = True
-								self.bounce("vert")
-
-							#Bottom collision
-							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
-							self.rect.top <= p.rect.bottom:
-								if DEBUG:
-									print "Collide bottom"
-								self.rect.top = p.rect.bottom
-								self.collided = True
-								self.bounce("vert")
-						
-						if self.rect.bottom >= p.rect.top+stair_tolerance and\
-						self.rect.top <= p.rect.bottom:
-							
-							#Right Collision
-							if self.rect.left <= p.rect.right and\
-							self.rect.left >= p.rect.right-10:
-								if DEBUG:
-									print "Collide right"
-								self.rect.left = p.rect.right+1
-								self.collided = True
-								self.bounce("horiz")
-							
-							#Left Collision
-							elif self.rect.right >= p.rect.left and\
-							self.rect.right <= p.rect.left+10:
-								if DEBUG:
-									print "Collide left"
-								self.rect.right = p.rect.left-1
-								self.collided = True
-								self.bounce("horiz")
-		return self.collided
 		
 	def bounce(self,bounce_dir):
 		if bounce_dir=="vert":
@@ -719,5 +721,5 @@ class Grenade(pygame.sprite.Sprite):
 					if DEBUG:
 						print m.health
 					self.collided = True
-					hurt.play()
+					sfx.play(hurt)
 					return self.collided

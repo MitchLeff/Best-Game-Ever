@@ -260,7 +260,7 @@ while running:
 
 	#Update and Draw Grenades
 	for g in grenades:
-		g.update(platforms,players)
+		g.update(platforms,players,collisionGrid)
 		screen.blit(g.image, camera.mod(g.rect))
 
 	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
