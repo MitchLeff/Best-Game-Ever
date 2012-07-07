@@ -9,9 +9,6 @@ init()
 
 #Furthermore, all sprites need a self.type variable defining what type of sprite unless Python has a built-in instanceOf function#
 			
-class Enemy(pygame.sprite.Sprite):
-	pass
-
 class Player(pygame.sprite.Sprite):
 	def __init__(self, spritesheet, controller, number):
 		pygame.sprite.Sprite.__init__(self)
@@ -68,6 +65,9 @@ class Player(pygame.sprite.Sprite):
 
 		#Collision Detection
 		self.squaresImIn = []
+		
+		#Sounds
+		self.hurt_sound = hurt
 	
 	def resetJumps(self):
 		self.jumped = False
@@ -262,7 +262,7 @@ class Player(pygame.sprite.Sprite):
 		elif self.xdirection<0:#facing left
 			direction = self.rect.left-self.max_speed_x-10
 			bullet_dir = -1
-		shot = Bullet(players,bullet_dir,(direction,self.rect.top+11),dmg,speed,self)
+		shot = Bullet(players,bullet_dir,(direction,self.rect.center[1]-30),dmg,speed,self)
 		return shot
 		
 	def throw(self,players):
@@ -279,6 +279,159 @@ class Player(pygame.sprite.Sprite):
 		if DEBUG:
 			print item.rect.midbottom
 		return item
+		
+class Enemy(Player):
+	def __init__(self, spritesheet, pos = (width/2,height)):
+		#Define sprite attributes
+		pygame.sprite.Sprite.__init__(self)
+		self.sprite_options = spritesheet
+		self.image = self.sprite_options[0]
+		self.rect = self.image.get_rect()
+		
+		self.type = "enemy"
+		
+		#Make smaller collision rectangle
+		self.rect = pygame.Rect(self.rect.left+5,self.rect.top,self.rect.width-30,self.rect.height)
+		self.rect.midbottom = pos
+		
+		#Movement and speed variables
+		self.max_speed_x = MAX_SPEED_X
+		self.max_speed_y = MAX_SPEED_Y
+		
+		self.acceleration = 1.0
+		
+		self.natural_acceleration = self.acceleration/2
+		
+		self.xdirection = 1
+		self.ydirection = 0
+
+		self.xspeed = 0
+		self.yspeed = 0		
+		self.x_vel = 0
+		self.y_vel = 0
+		self.x_acceleration = 0
+		self.y_acceleration = GRAVITY
+		
+		#Image variables
+		self.moving_sprites = self.sprite_options
+		
+		self.step = 0
+		self.image_tempo = 6.0
+		
+		#State variables
+		self.jumps_left = 0
+		self.jumped = False
+		
+		self.shooting = False
+		self.grenading = False
+		self.grenade = 0
+		
+		self.collided = False
+		
+		#Health
+		self.maxHealth = 100.0
+		self.health = self.maxHealth
+
+		#Collision Detection
+		self.squaresImIn = []
+		
+		#Sounds
+		self.die_sound = enemy_die
+		self.hurt_sound = enemy_hurt
+
+	def update(self, players, currGrid):
+		
+		#Basic AI, randomly shoot and randomly change direction
+		if (random.randint(0,10) == 9):
+			bullets.add(self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED)))
+		
+		if (random.randint(0,20) == 19):
+			self.xdirection *= -1
+		
+		#Test to see if unit is dead
+		if self.health <= 0:
+			sfx.play(self.die_sound)
+			self.kill()
+			return
+		
+		#Get direction being pressed and update accordingly
+		#self.x_acceleration = state['L_R']*self.acceleration
+		
+		if self.x_acceleration < 0:
+			self.xdirection = -1
+		elif self.x_acceleration > 0:
+			self.xdirection = 1
+		
+		"""if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
+			sfx.play(jump_sound)
+			self.y_vel = -18
+			self.jumped = True
+			self.jumps_left -= 1
+		if state['U_D'] != -1:
+			self.jumped = False"""
+
+		self.x_vel += self.x_acceleration
+		self.y_vel += self.y_acceleration
+		
+		#Check for deceleration
+		if self.x_acceleration == 0:
+			
+			if self.x_vel <= self.natural_acceleration and self.x_vel >= -1*self.natural_acceleration:
+				self.x_vel = 0
+			elif self.x_vel < 0:
+				self.x_vel += self.natural_acceleration
+			elif self.x_vel > 0:
+				self.x_vel -= self.natural_acceleration
+		
+		#Check Max Speed
+		if self.x_vel >= self.max_speed_x:
+			self.x_vel = self.max_speed_x
+		elif self.x_vel <= -1*self.max_speed_x:
+			self.x_vel = -1*self.max_speed_x
+		if self.y_vel >= self.max_speed_y:
+			self.y_vel = self.max_speed_y
+		elif self.y_vel <= -1*self.max_speed_y:
+			self.y_vel = -1*self.max_speed_y
+		
+		self.collisionExclusions = [self.grenade]
+		
+		#Update position one pixel at a time, checking for collisions each pixel to prevent noclip
+		if (self.x_vel<0):
+			for i in range(abs(int(self.x_vel))):
+				self.rect.left += -1
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
+					break
+		elif (self.x_vel>0):
+			for i in range(int(self.x_vel)):
+				self.rect.left += 1
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
+					break
+		if (self.y_vel<0):
+			for i in range(abs(int(self.y_vel))):
+				self.rect.top += -1
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
+					break
+		elif (self.y_vel>0):
+			for i in range(int(self.y_vel)):
+				self.rect.top += 1
+				if checkForCollisions(currGrid,self,self.collisionExclusions):
+					break
+					
+		self.setImage()
+		
+		#Check if out of bounds
+		if self.rect.bottom >= levelHeight:
+			self.rect.bottom = levelHeight
+			self.resetJumps()
+		if self.rect.left < 0:
+			self.rect.left = 0
+			self.x_vel = 0
+			self.x_acceleration = 0
+		elif self.rect.right >= levelWidth:
+			self.rect.right = levelWidth
+			self.x_vel = 0
+			self.x_acceleration = 0
+
 
 class Point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):
@@ -399,33 +552,36 @@ class Bullet(pygame.sprite.Sprite):
 		#Collision Detection
 		self.squaresImIn = []
 	
-	def update(self, platforms, players):
-
+	def update(self, platforms, players, currGrid):
+		
 		self.x_vel += self.x_accell
 		self.y_vel += self.y_accell
+		
+		self.outOfBounds()
 		
 		#Update position, checking for collisions each pixel
 		if (self.x_vel<0):
 			for i in range(abs(int(self.x_vel))):
 				self.rect.left += -1
-#				if checkForCollisions(currGrid,self):
-#					break
+				if checkForCollisions(currGrid,self):
+					break
 		elif (self.x_vel>0):
 			for i in range(int(self.x_vel)):
 				self.rect.left += 1
-#				if checkForCollisions(currGrid,self):
-#					break
+				if checkForCollisions(currGrid,self):
+					break
 		if (self.y_vel<0):
 			for i in range(abs(int(self.y_vel))):
 				self.rect.top += -1
-#				if checkForCollisions(currGrid,self):
-#					break
+				if checkForCollisions(currGrid,self):
+					break
 		elif (self.y_vel>0):
 			for i in range(int(self.y_vel)):
 				self.rect.top += 1
-#				if checkForCollisions(currGrid,self):
-#					break
-		if self.collided or self.rect.left > levelWidth or self.rect.right < 0:
+				if checkForCollisions(currGrid,self):
+					break
+		
+		if self.collided:
 			self.kill()
 			return
 			
@@ -434,9 +590,19 @@ class Bullet(pygame.sprite.Sprite):
 			self.image = pygame.transform.flip(self.image, True, False)
 	
 	def onCollision(self,collidingWith):
-		pass
+		if collidingWith.type=="platform":
+			self.collided = True
+			return True
+		
+		if collidingWith.type=="player" or collidingWith.type=="enemy":
+			collidingWith.health -= self.damage
+			self.collided = True
+			sfx.play(collidingWith.hurt_sound)
+			return True
+		
+		return False
 	
-	def collisioncheck(self,platforms,players):
+	def outOfBounds(self):
 		self.collided = False
 		if self.rect.bottom >= levelHeight:
 			self.rect.bottom = levelHeight
@@ -451,57 +617,6 @@ class Bullet(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_accell = 0
 			self.collided = True
-			
-		for p in platforms:
-			if abs(p.rect.x-self.rect.x)<= self.collisionCheckDist+p.rect.width and\
-			abs(p.rect.y-self.rect.y)<= self.collisionCheckDist+p.rect.height:
-				if pygame.sprite.collide_mask(p, self):
-						if self.rect.left <= p.rect.right and self.rect.right >= p.rect.left:
-							#Top collision
-							if self.rect.bottom <= p.rect.top+p.rect.height/2 and\
-							self.rect.bottom >= p.rect.top:
-								self.y_vel = 0
-								self.jumped = False
-								self.jump_frames = 0
-								#self.rect.bottom = p.rect.top
-								self.collided = True
-							#Bottom collision
-							elif self.rect.top >= p.rect.bottom-p.rect.height/2 and\
-							self.rect.top <= p.rect.bottom:
-								self.y_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
-								#self.rect.top = p.rect.bottom
-								self.collided = True
-						
-						if self.rect.bottom >= p.rect.top and\
-						self.rect.top <= p.rect.bottom:
-							#Right Collision
-							if self.rect.left <= p.rect.right and\
-							self.rect.left >= p.rect.right-10:
-								self.x_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
-								#self.rect.left = p.rect.right+1
-								self.collided = True
-							#Left Collision
-							elif self.rect.right >= p.rect.left and\
-							self.rect.right <= p.rect.left+10:
-								self.x_vel = 0
-								self.jumped = True
-								self.jump_frames = 0
-								#self.rect.right = p.rect.left-1
-								self.collided = True
-		for m in players:
-			if abs(m.rect.x-self.rect.x)<= self.collisionCheckDist+m.rect.width and\
-			abs(m.rect.y-self.rect.y)<= self.collisionCheckDist+m.rect.height:
-				if pygame.sprite.collide_mask(m, self):
-					m.health -= self.damage
-					if DEBUG:
-						print m.health
-					self.collided = True
-					hurt.play()
-					return self.collided
 		
 class Grenade(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):

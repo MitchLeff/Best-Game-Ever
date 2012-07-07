@@ -223,8 +223,12 @@ while running:
 			sys.exit()
 
 		elif event.type == MOUSEBUTTONDOWN:
-			newp = Platform(camera.mod2(event.pos))
-			platforms.add(newp)
+			if event.button == 1:
+				newp = Platform(camera.mod2(event.pos))
+				platforms.add(newp)
+			elif event.button == 3:
+				newEnemy = Enemy(ENEMY_SPRITE_LIST, camera.mod2(event.pos))
+				enemies.add(newEnemy)
 
 	for player in players.sprites():
 		actions = player.update(players.sprites(), collisionGrid)
@@ -243,7 +247,12 @@ while running:
 
 	#Draw Background
 	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
-
+	
+	#Update and Draw Enemies
+	for enemy in enemies.sprites():
+		enemy.update(players.sprites(),collisionGrid)
+		screen.blit(enemy.image, camera.mod(enemy.rect))
+	
 	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, camera.mod(p.rect))
@@ -255,7 +264,7 @@ while running:
 
 	#Draw and Update Bullets
 	for b in bullets:
-		b.update(platforms,players)
+		b.update(platforms,players,collisionGrid)
 		screen.blit(b.image, camera.mod(b.rect))
 
 	#Update and Draw Grenades
@@ -263,7 +272,7 @@ while running:
 		g.update(platforms,players,collisionGrid)
 		screen.blit(g.image, camera.mod(g.rect))
 
-	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites()
+	collidableSprites = platforms.sprites() + players.sprites() + grenades.sprites() + bullets.sprites() + enemies.sprites()
 	for sprite in collidableSprites:
 		collisionGrid = updateGrid(sprite, collisionGrid)
 	checkForCollisions(collisionGrid)

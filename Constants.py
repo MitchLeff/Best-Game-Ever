@@ -38,6 +38,8 @@ stomp_sound = pygame.mixer.Sound("sounds/stomp.wav")
 shoot = pygame.mixer.Sound("sounds/shoot.wav")
 hurt = pygame.mixer.Sound("sounds/hurt.wav")
 explosion = pygame.mixer.Sound("sounds/explosion.wav")
+enemy_hurt = pygame.mixer.Sound("sounds/bearhurt.wav")
+enemy_die = pygame.mixer.Sound("sounds/beardeath.wav")
 
 combo0 = pygame.mixer.Sound("sounds/killingspree.wav")
 combo1 = pygame.mixer.Sound("sounds/rampage.wav")
@@ -53,11 +55,13 @@ spy = (pygame.image.load("images/spy.png").convert_alpha())
 engineer = (pygame.image.load("images/engineer.png").convert_alpha())
 soldier = (pygame.image.load("images/soldier.png").convert_alpha())
 medic = (pygame.image.load("images/medic.png").convert_alpha())
+enemy = (pygame.image.load("images/enemy.png").convert_alpha())
 
 SPY_SPRITE_LIST = [spy]
 ENGINEER_SPRITE_LIST = [engineer]
 SOLDIER_SPRITE_LIST = [soldier]
 MEDIC_SPRITE_LIST = [medic]
+ENEMY_SPRITE_LIST = [enemy]
 
 PLAYER_SPRITE_OPTIONS = [SPY_SPRITE_LIST, ENGINEER_SPRITE_LIST, SOLDIER_SPRITE_LIST, MEDIC_SPRITE_LIST]
 
