@@ -40,6 +40,7 @@ hurt = pygame.mixer.Sound("sounds/hurt.wav")
 explosion = pygame.mixer.Sound("sounds/explosion.wav")
 enemy_hurt = pygame.mixer.Sound("sounds/bearhurt.wav")
 enemy_die = pygame.mixer.Sound("sounds/beardeath.wav")
+mindcontrol = pygame.mixer.Sound("sounds/explosion.wav")
 
 combo0 = pygame.mixer.Sound("sounds/killingspree.wav")
 combo1 = pygame.mixer.Sound("sounds/rampage.wav")
@@ -67,7 +68,9 @@ PLAYER_SPRITE_OPTIONS = [SPY_SPRITE_LIST, ENGINEER_SPRITE_LIST, SOLDIER_SPRITE_L
 
 #WEAPON IMAGES
 bullet_img = (pygame.image.load("images/bullet.png").convert_alpha())
+mindcontrol_bullet = (pygame.image.load("images/bullet.png").convert_alpha())
 BULLET_SPRITE_OPTIONS = [bullet_img]
+MINDCONTROL_BULLET_SPRITE_OPTIONS = [mindcontrol_bullet]
 
 grenade_img = (pygame.image.load("images/grenade.png").convert_alpha())
 explosion_sprites = sprite_sheet((64,64),"images/explosion_sprites.png")

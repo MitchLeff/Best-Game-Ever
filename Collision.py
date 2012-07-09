@@ -88,11 +88,12 @@ def checkForCollisions(currGrid,sprite=0,exclusions=[0]):
 			for square in row:
 				if len(square.objectsContained) > 1:
 					for b in square.objectsContained:
-						print 'CHECKING:',b
+						#print 'CHECKING:',b
 						for bb in square.objectsContained:
-							print 'CHECKING:',bb
+							#print 'CHECKING:',bb
 							if pygame.sprite.collide_rect(b, bb) and b != bb:
-								print "HIT"
+								if DEBUG:
+									print "HIT"
 								return bb.onCollision(b)
 	
 	#If a sprite is provided, only check its squares (used for loop movement of players to increase efficiency)
@@ -105,5 +106,6 @@ def checkForCollisions(currGrid,sprite=0,exclusions=[0]):
 						pass
 				#print 'CHECKING:',b //should be able to add sprite to exclusions array
 				if pygame.sprite.collide_rect(sprite, collidable) and sprite != collidable:
-					print "HIT"
+					if DEBUG:
+						print "HIT"
 					return sprite.onCollision(collidable)

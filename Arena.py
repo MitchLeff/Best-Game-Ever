@@ -242,6 +242,8 @@ while running:
 				bullets.add(actions['Bullet'])
 			if actions['Grenade']:
 				grenades.add(actions['Grenade'])
+			if actions['MindControl']:
+				bullets.add(actions['MindControl'])
 
 	platforms.update(camera)
 

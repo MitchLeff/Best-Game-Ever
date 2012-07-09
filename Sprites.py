@@ -52,6 +52,8 @@ class Player(pygame.sprite.Sprite):
 		
 		self.shooting = False
 		self.grenading = False
+		self.controlling = False
+		self.controllee = 0
 		self.grenade = 0
 		
 		self.collided = False
@@ -77,7 +79,8 @@ class Player(pygame.sprite.Sprite):
 		#Joystick compatible
 		
 		#Get the state of the controller to determine how to update
-		state = self.controller.getState()
+		if self.controller != 0:
+			state = self.controller.getState()
 		
 		#Test to see if unit is dead
 		if self.health <= 0:
@@ -85,21 +88,23 @@ class Player(pygame.sprite.Sprite):
 			self.kill()
 			return self.player_number
 		
-		#Get direction being pressed and update accordingly
-		self.x_acceleration = state['L_R']*self.acceleration
+		if self.controller!=0:
+			#Get direction being pressed and update accordingly
+			self.x_acceleration = state['L_R']*self.acceleration
 		
 		if self.x_acceleration < 0:
 			self.xdirection = -1
 		elif self.x_acceleration > 0:
 			self.xdirection = 1
 		
-		if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
-			sfx.play(jump_sound)
-			self.y_vel = -18
-			self.jumped = True
-			self.jumps_left -= 1
-		if state['U_D'] != -1:
-			self.jumped = False
+		if self.controller!=0:
+			if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
+				sfx.play(jump_sound)
+				self.y_vel = -18
+				self.jumped = True
+				self.jumps_left -= 1
+			if state['U_D'] != -1:
+				self.jumped = False
 
 		self.x_vel += self.x_acceleration
 		self.y_vel += self.y_acceleration
@@ -162,29 +167,37 @@ class Player(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_acceleration = 0
 		
-		#Perform other actions
-		actions = {'Bullet':None, 'Grenade':None}
-		if state['A'] and not self.shooting:
-			self.shooting = True
-			actions['Bullet'] = self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED))
-		elif not state['A']:
-			self.shooting = False
+		if self.controller != 0:
+			#Perform other actions
+			actions = {'Bullet':None, 'Grenade':None, 'MindControl':None}
+			if state['A'] and not self.shooting:
+				self.shooting = True
+				actions['Bullet'] = self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED))
+			elif not state['A']:
+				self.shooting = False
 		
-		if state['B'] and not self.grenading:
-			self.grenading = True
-			self.grenade = self.throw(players)
-			actions['Grenade'] = self.grenade
-		elif not state['B']:
-			try:
-				self.grenade.cooking = False
-			except:
-				pass
-			self.grenading = False
+			if state['B'] and not self.grenading:
+				self.grenading = True
+				self.grenade = self.throw(players)
+				actions['Grenade'] = self.grenade
+			elif not state['B']:
+				try:
+					self.grenade.cooking = False
+				except:
+					pass
+				self.grenading = False
+		
+			if state['X']:
+				self.shooting = True
+				actions['MindControl']  = self.mindControl(players)
+			elif not state['X']:
+				self.shooting = False
 			
 		self.inventory.update()
 		self.healthBar.update()
 		
-		return actions
+		if self.controller != 0:
+			return actions
 		
 	def setImage(self):
 		#Set Image
@@ -280,8 +293,19 @@ class Player(pygame.sprite.Sprite):
 			print item.rect.midbottom
 		return item
 		
+	def mindControl(self,players):
+		if self.xdirection>0:#facing right
+			direction = self.rect.right+self.max_speed_x+10
+			bullet_dir = 1
+		elif self.xdirection<0:
+			direction = self.rect.left-self.max_speed_x-10
+			bullet_dir = -1
+		shot = MindControlBullet(players,bullet_dir,(direction,self.rect.center[1]-30),self)
+		return shot
+		
+		
 class Enemy(Player):
-	def __init__(self, spritesheet, pos = (width/2,height)):
+	def __init__(self, spritesheet, pos = (width/2,height), controller = 0):
 		#Define sprite attributes
 		pygame.sprite.Sprite.__init__(self)
 		self.sprite_options = spritesheet
@@ -289,6 +313,7 @@ class Enemy(Player):
 		self.rect = self.image.get_rect()
 		
 		self.type = "enemy"
+		self.controller = 0
 		
 		#Make smaller collision rectangle
 		self.rect = pygame.Rect(self.rect.left+5,self.rect.top,self.rect.width-30,self.rect.height)
@@ -324,12 +349,13 @@ class Enemy(Player):
 		
 		self.shooting = False
 		self.grenading = False
+		self.controlledBy = 0
 		self.grenade = 0
 		
 		self.collided = False
 		
 		#Health
-		self.maxHealth = 100.0
+		self.maxHealth = 300.0
 		self.health = self.maxHealth
 
 		#Collision Detection
@@ -338,15 +364,21 @@ class Enemy(Player):
 		#Sounds
 		self.die_sound = enemy_die
 		self.hurt_sound = enemy_hurt
-
-	def update(self, players, currGrid):
-		
+	
+	def ai(self,players):
 		#Basic AI, randomly shoot and randomly change direction
 		if (random.randint(0,10) == 9):
 			bullets.add(self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED)))
-		
+	
 		if (random.randint(0,20) == 19):
 			self.xdirection *= -1
+
+	def update(self, players, currGrid):
+		
+		if self.controller == 0: 
+			self.ai(players)
+		else:
+			state = self.controller.getState()
 		
 		#Test to see if unit is dead
 		if self.health <= 0:
@@ -355,20 +387,22 @@ class Enemy(Player):
 			return
 		
 		#Get direction being pressed and update accordingly
-		#self.x_acceleration = state['L_R']*self.acceleration
+		if self.controller!=0:
+			self.x_acceleration = state['L_R']*self.acceleration
 		
 		if self.x_acceleration < 0:
 			self.xdirection = -1
 		elif self.x_acceleration > 0:
 			self.xdirection = 1
 		
-		"""if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
-			sfx.play(jump_sound)
-			self.y_vel = -18
-			self.jumped = True
-			self.jumps_left -= 1
-		if state['U_D'] != -1:
-			self.jumped = False"""
+		if self.controller!=0:
+			if state['U_D'] == -1 and self.jumps_left > 0 and not self.jumped:
+				sfx.play(jump_sound)
+				self.y_vel = -18
+				self.jumped = True
+				self.jumps_left -= 1
+			if state['U_D'] != -1:
+				self.jumped = False
 
 		self.x_vel += self.x_acceleration
 		self.y_vel += self.y_acceleration
@@ -431,7 +465,33 @@ class Enemy(Player):
 			self.rect.right = levelWidth
 			self.x_vel = 0
 			self.x_acceleration = 0
-
+			
+		if (self.controller!=0):
+			#Perform other actions
+			actions = {'Bullet':None, 'Grenade':None}
+			if state['A'] and not self.shooting:
+				self.shooting = True
+				actions['Bullet'] = self.shoot(players,BULLET_DAMAGE,self.xdirection*(BULLET_SPEED))
+			elif not state['A']:
+				self.shooting = False
+		
+			if state['B'] and not self.grenading:
+				self.grenading = True
+				self.grenade = self.throw(players)
+				actions['Grenade'] = self.grenade
+			elif not state['B']:
+				try:
+					self.grenade.cooking = False
+				except:
+					pass
+				self.grenading = False
+				
+			if state['Y']:
+				self.controller = 0
+				self.controlledBy.controller = self.controlledBy.tempController
+				self.controlledBy.controlling = False
+				self.controlledBy.controllee = 0
+				
 
 class Point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):
@@ -529,7 +589,7 @@ class Bullet(pygame.sprite.Sprite):
 		
 		#SPRITE
 		pygame.sprite.Sprite.__init__(self)
-		self.sprite_options = BULLET_SPRITE_OPTIONS
+		self.sprite_options = sprite
 		self.image = self.sprite_options[0]
 		self.rect = self.image.get_rect()
 		if dir == 1: 
@@ -548,6 +608,7 @@ class Bullet(pygame.sprite.Sprite):
 		#PARAMETERS
 		self.damage = damage
 		self.type = "bullet"
+		self.creator = creator
 		
 		#Collision Detection
 		self.squaresImIn = []
@@ -617,6 +678,26 @@ class Bullet(pygame.sprite.Sprite):
 			self.x_vel = 0
 			self.x_accell = 0
 			self.collided = True
+			
+class MindControlBullet(Bullet):
+	def __init__(self,players,dir,pos,creator,xvel=10):
+		super(MindControlBullet, self).__init__(players,dir,pos,0,xvel,creator,MINDCONTROL_BULLET_SPRITE_OPTIONS)
+		
+	def onCollision(self,collidingWith):
+		if collidingWith.type=="enemy" and not self.creator.controlling:
+			print "CONTROLLER BEFORE:",collidingWith.controller
+			collidingWith.controller = self.creator.controller
+			collidingWith.controlledBy = self.creator
+			print "CONTROLLER AFTER:",collidingWith.controller
+			self.creator.tempController = self.creator.controller
+			self.creator.controller = 0
+			self.creator.controlling = True
+			self.creator.controllee = collidingWith
+			self.collided = True
+			sfx.play(mindcontrol)
+			return True
+		
+		return False
 		
 class Grenade(pygame.sprite.Sprite):
 	def __init__(self,players,dir,pos,x_vel=10,y_vel=10,elasticity = 0.8):
