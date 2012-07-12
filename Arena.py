@@ -57,14 +57,14 @@ camera = Camera(players.sprites()[0], (width,height-HUDSIZE), background_image.g
 
 #Test Moving Platforms
 mp1 = MovingPlatform( [[100,400], [300,400]], [1,0])
-mp2 = MovingPlatform( [[500,900], [300,1000]], [2,0])
-mp3 = MovingPlatform( [[500,800], [700,1000]], [4,0])
-mp4 = MovingPlatform( [[900,700], [700,1000]], [8,0])
-mp5 = MovingPlatform( [[100,300], [levelWidth - 100,300]], [20,0])
+mp2 = MovingPlatform( [[400,400], [600,400]], [2,0])
+mp3 = MovingPlatform( [[700,400], [900,400]], [4,0])
+mp4 = MovingPlatform( [[1000,400], [1200,400]], [8,0])
+mp5 = MovingPlatform( [[100,200], [levelWidth - 100,200]], [20,0])
 platforms.add(mp1)
-#platforms.add(mp2)
-#platforms.add(mp3)
-#platforms.add(mp4)
+platforms.add(mp2)
+platforms.add(mp3)
+platforms.add(mp4)
 platforms.add(mp5)
 
 
@@ -72,7 +72,7 @@ platforms.add(mp5)
 collisionGrid = createGrid(GRID_SQUARE_LENGTH)
 
 def controlsMenu():
-	
+
 	whichPlayer = 1
 	jump = Button("Jump",(width/2-100,100))
 	moveLeft = Button("Move Left")
@@ -107,12 +107,12 @@ def optionsMenu():
 	controlsButton = Button("Controls")
 	buttons = [volumeUp,volumeDown,changeMusic,controlsButton,backButton]
 	optionsMenu = Menu(buttons,(width/2-100,height/2+50))
-	
+
 	#Whatever track is playing at start, display its name
 	currentTrack = MUSIC[currentMusic][13:-4]#-index for string means backtracking from end
 	musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
 	screen.blit(musicText,(width/2-100,height/2-100))
-	
+
 	MENU = True
 	while MENU:
 		for event in pygame.event.get():
@@ -133,7 +133,7 @@ def optionsMenu():
 					musicText = smallFont.render("Currently playing "+currentTrack,True,(255,125,0))
 					screen.blit(optionsMenu.background,(0,0))
 					screen.blit(musicText,(width/2-100,height/2-100))
-					
+
 				elif volumeUp.clicked(event.pos):
 					volumeChangeAll(soundChannels,0.2)
 				elif volumeDown.clicked(event.pos):
@@ -247,12 +247,12 @@ while running:
 
 	#Draw Background
 	screen.blit(background_image, (-1*camera.pos[0], -1*camera.pos[1]))
-	
+
 	#Update and Draw Enemies
 	for enemy in enemies.sprites():
 		enemy.update(players.sprites(),collisionGrid)
 		screen.blit(enemy.image, camera.mod(enemy.rect))
-	
+
 	#Draw Players
 	for p in players.sprites():
 		screen.blit(p.image, camera.mod(p.rect))
