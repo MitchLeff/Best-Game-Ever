@@ -65,3 +65,29 @@ def chooseLevel():
 		return chooseLevel()
 	return loadLevel(options[choice-1])
 	br()
+	
+def sprite_sheet(size,file,offsetX=0,offsetY=0,pos=(0,0)):
+
+	#Initial Values
+	len_sprt_x,len_sprt_y = size #sprite size
+	sprt_rect_x,sprt_rect_y = pos #where to find sprite on sheet
+	
+	sheet = pygame.image.load(file).convert_alpha() #Load the sheet
+	sheet_rect = sheet.get_rect()
+	sprites = []
+	print sheet_rect.height, sheet_rect.width
+	for i in range(0,sheet_rect.height-len_sprt_y,size[1]):#rows
+		print "row"
+		for j in range(0,sheet_rect.width-len_sprt_x,size[0]):#columns
+			print "column"
+			#For the first sprite, ignore the offsetX and offsetY
+			sheet.set_clip(pygame.Rect(sprt_rect_x, sprt_rect_y, len_sprt_x, len_sprt_y))
+			#Grab the sprite you want
+			sprite = sheet.subsurface(sheet.get_clip()) #grab the sprite you want
+			sprites.append(sprite)
+			sprt_rect_x += len_sprt_x+offsetX
+			
+		sprt_rect_y += len_sprt_y+offsetY
+		sprt_rect_x = 0
+	print sprites
+	return sprites

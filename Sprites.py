@@ -42,10 +42,10 @@ class Player(pygame.sprite.Sprite):
 		self.x_acceleration = 0
 		self.y_acceleration = GRAVITY
 		
-		self.moving_sprites = self.sprite_options
+		self.moving_sprites = self.sprite_options[1]
 		
 		self.step = 0
-		self.image_tempo = 6.0
+		self.image_tempo = 10.0
 		
 		self.jumps_left = 0
 		self.jumped = False
@@ -492,6 +492,18 @@ class Enemy(Player):
 				self.controlledBy.controlling = False
 				self.controlledBy.controllee = 0
 				
+""" The death worm is an enemy composed of several body segments stuck together.
+	It comes out of the ground, shoots into the air, and comes down where the player is currently located.
+	It knocks back the player on impact and does a large amount of damage.
+	"""
+class DeathWorm(Enemy):
+	def __init__(self, pos = (width/2,height), controller = 0):
+		spritesheet = []
+		super.__init__(self,spritesheet,pos,controller)
+		
+	def ai(self,players):
+		pass
+	
 
 class Point(pygame.sprite.Sprite):
 	def __init__(self, n, pos):

@@ -1,5 +1,4 @@
 from Helpers import *
-from sprite_sheet_loader import *
 import pygame, random, sys, glob, pickle
 
 init()
@@ -58,7 +57,7 @@ soldier = (pygame.image.load("images/soldier.png").convert_alpha())
 medic = (pygame.image.load("images/medic.png").convert_alpha())
 enemy = (pygame.image.load("images/enemy.png").convert_alpha())
 
-SPY_SPRITE_LIST = [spy]
+SPY_SPRITE_LIST = [spy,sprite_sheet((95,85),"images/spyRunning.png",3,0,(2,2))]
 ENGINEER_SPRITE_LIST = [engineer]
 SOLDIER_SPRITE_LIST = [soldier]
 MEDIC_SPRITE_LIST = [medic]
