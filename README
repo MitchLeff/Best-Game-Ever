@@ -3,16 +3,22 @@ This is the Best Game Ever.
 Coders: Peter Kennedy, Mitch Leff
 Artist: Kyle Malone
 Music:  Clayton Fleegal
-Story:  Andrew Drexel
+Story:  Andrew Drexel, Andrew Christopher
 Testing: Andrew Christopher, Andrew Drexel, Mary Macheski-Preston
 
 To play the game, install pygame for Python and then load Arena.py.
 pygame is located at: http://www.pygame.org/news.html
+This game supports up to four players at once via gamepads.
 
 Controls:
 
+Mouse:
+  Left Click - place platform
+  Right Click - spawn enemy
+
 Keyboard:
-  Arrows - Move/jump
+  Escape - menu
+  Arrows - move/jump
   Space - shoot
   Shift - grenade (hold to cook; release to throw)
 
@@ -24,4 +30,3 @@ Gamepad:
 (Experimental):
   b - shoot mind-control bullet
   j - eject from mind-control
-  Right Click - spawn enemy
