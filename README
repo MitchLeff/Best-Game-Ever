@@ -1,2 +1,41 @@
-this is. the best. game 
-EEVVERRRRRRR
+This is the Best Game Ever.
+
+Coders: Peter Kennedy, Mitch Leff
+Artist: Kyle Malone
+Music:  Clayton Fleegal
+Story:  Andrew Drexel, Andrew Christopher
+Testing: Andrew Christopher, Andrew Drexel, Mary Macheski-Preston
+
+To play the game, install pygame for Python and then load Arena.py.
+pygame is located at: http://www.pygame.org/download.shtml
+This game supports up to four players at once via gamepads.
+
+Controls:
+
+Mouse:
+  Left Click - place platform
+  Right Click - spawn enemy
+
+Keyboard:
+  \ - toggle debug mode
+  1 - save current level (prompts for name)
+  2 - load level (listed in terminal window)
+  PageUp/Down - volume control
+  Escape - menu
+Player 1:
+  WASD - move/jump
+  Space - shoot
+  Shift - grenade (hold to cook; release to throw)
+Player 2:
+  Arrows - move/jump
+  /      - shoot
+  .      - grenade
+
+Gamepad:
+  A - jump
+  Right Trigger - shoot
+  Left Trigger - grenade
+
+(Experimental):
+  b - shoot mind-control bullet
+  j - eject from mind-control
